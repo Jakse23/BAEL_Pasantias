@@ -1,0 +1,192 @@
+{% extends 'home.html' %}
+{% block content %}
+{% load static %}
+{% load tz %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card custom-card-height mb-3 mt-3 me-3 ms-3">
+            <div class="card-header">
+                <h5 class="card-title">Órdenes de Requisición</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button class="btn btn-md btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+                        <i class="fas fa-plus"></i> <strong>Añadir Orden de Requisición</strong>
+                    </button>
+                </div>
+                <table id="datatable-requisition_order" class="table responsive">
+                    <thead>
+                        <tr>
+                            <th class="centered">Fecha de Registro</th>
+                            <th class="centered">Estado</th>
+                            <th class="centered">Detalles</th>
+                            <th class="centered">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in requisition_order %}
+                        <tr data-id="{{ order.id }}">
+                            <td>{{ order.application_date|localtime|date:"Y-m-d H:i" }}</td>
+                            <td>{{ order.get_status_display }}</td>
+                            <td>
+                                <button class="btn btn-sm btn-info show-details-order-btn"
+                                    data-order-id="{{ order.id }}">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                            </td>
+                            <td>
+                                {% if order.status != 2 %}
+                                <button class="btn btn-sm btn-primary btn-edit-order" data-id="{{ order.id }}">
+                                    <i class="fas fa-pencil-alt"></i>
+                                </button>
+                                <button class="btn btn-sm btn-danger btn-delete-order" data-id="{{ order.id }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning btn-change-status" data-id="{{ order.id }}">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                {% endif %}
+                                {% if order.status == 2 %}
+                                <span class="badge bg-secondary ms-2">Cerrado</span>
+                                {% if not order.has_dispatch %}
+                                <button class="btn btn-sm btn-success btn-generate-dispatch-order"
+                                    data-order-id="{{ order.id }}" data-type="requisition">
+                                    <i class="fa-solid fa-truck-ramp-box"></i>
+                                </button>
+                                {% endif %}
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Detalles de Orden -->
+<div class="modal fade" id="details-modal" tabindex="-1" aria-labelledby="detailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsModalLabel">Detalles de la Orden</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="details-container">
+                    <!-- Detalles Dinámicos (JS) -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Añadir Orden de Requisición -->
+<div class="modal fade" id="addModal" tabindex="-1" aria-labelledby="addModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="add-order-form">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addModalLabel">Añadir Orden de Requisición</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label>Fecha de Inicio</label>
+                            <input type="datetime-local" name="start_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Fecha Estimada de Llegada</label>
+                            <input type="datetime-local" name="estimated_arrival" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Fecha de Fin</label>
+                            <input type="datetime-local" name="end_date" class="form-control" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label>Ubicación de Destino</label>
+                            <select name="fk_destination_location" class="form-control">
+                                <option value="" selected disabled hidden>Seleccione</option>
+                                {% for loc in locations %}
+                                <option value="{{ loc.id }}">{{ loc }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label>Observación</label>
+                            <input type="text" name="observation" class="form-control">
+                        </div>
+                    </div>
+                    <hr>
+                    <!-- Agregar Materiales a la Orden -->
+                    <div id="materials-list">
+                        <div class="dynamic-detail row mb-2">
+                            <div class="col-md-4">
+                                <label>Material</label>
+                                <select name="fk_inventory[]" class="form-control">
+                                    <option value="" selected disabled hidden>Seleccione</option>
+                                    {% for inv in inventories %}
+                                    <option value="{{ inv.id }}">{{ inv }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label>Cantidad Mínima</label>
+                                <input type="text" name="minimum_quantity[]" class="form-control numeric-only" required>
+                            </div>
+                            <!-- Si quieres agregar más campos de material, agrégalos aquí como otra col-md-4 -->
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-secondary" id="add-detail">Agregar otro material</button>
+                </div>
+                <div class="modal-footer mt-3">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Orden de Requisición -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="edit-order-form">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Editar Orden de Requisición</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body" id="edit-modal-body">
+                    <!-- Aquí se cargará el formulario dinámicamente por JS -->
+                    <div class="text-center">
+                        <span class="spinner-border"></span>
+                    </div>
+                </div>
+                <div class="modal-footer mt-3">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/requisition_order/alerts-requisition_order.js' %}"></script>
+<script src="{% static 'assets/js/requisition_order/clean-add-form-requisition_order.js' %}"></script>
+<script src="{% static 'assets/js/requisition_order/datatable-requisition_order.js' %}"></script>
+<script src="{% static 'assets/js/requisition_order/show-order-details-requisition_order.js' %}"></script>
+<script src="{% static 'assets/js/requisition_order/add-material-to-order-requisition_order.js' %}"></script>
+<script src="{% static 'assets/js/requisition_order/change-order-status-requisition_order.js' %}"></script>
+<script src="{% static 'assets/js/requisition_order/validate-task-dates.js' %}"></script>
+<script src="{% static 'assets/js/requisition_order/numeric-only-inputs-requisition_order.js' %}"></script>
+<script src="{% static 'assets/js/requisition_order/edit-requisition_order.js' %}"></script>
+<script src="{% static 'assets/js/dispatch_order/generate-dispatch-from-order.js' %}"></script>
+{% endblock %}

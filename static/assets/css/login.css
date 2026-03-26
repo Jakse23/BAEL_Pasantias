@@ -1,0 +1,46 @@
+.overlay{
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0, 0, 0, 0.5); 
+    z-index: 1;
+}
+
+.login-box{
+    position: relative; 
+    z-index: 2; 
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    box-shadow: 0 0 20px rgba(70, 70, 70, 0.8);
+    border-radius: 10px;
+}
+
+#login-title{
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 10px;
+}
+
+#system-title{
+    font-family: 'Poppins', sans-serif; 
+    font-size: 2rem;
+}
+
+
+#amb-shield{
+    height: 40px; 
+    width: auto;
+}
+
+.login-page {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: url('../img/airplane.jpg') center center/cover no-repeat;
+    position: relative;
+}

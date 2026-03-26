@@ -1,0 +1,5 @@
+/* Modal de inventario más ancha y desplazada hacia abajo */
+#searchInventoryModal .modal-dialog {
+    max-width: 700px; /* Más ancha que el default */
+    margin-top: 80px; /* Desplazada hacia abajo */
+}

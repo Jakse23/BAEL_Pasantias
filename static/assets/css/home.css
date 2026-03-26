@@ -1,0 +1,33 @@
+/* Colocar en blanco los +íconos del side-bar */
+.custom-icon-color {
+    color: #ffffff;
+}
+
+/* Animación para la flecha */
+.toggle-icon {
+    transition: transform 0.3s ease;
+}
+
+/* Rota la flecha hacia abajo cuando el menú está abierto */
+.menu-open>.nav-link .toggle-icon {
+    transform: rotate(90deg);
+    /* Flecha apunta hacia abajo */
+}
+
+/* Colocar en verde y con el texto blanco el módulo del side-bar donde se está */
+.sidebar-wrapper .nav-link.active {
+    background-color: #28a745 !important;
+    color: white !important;
+    font-weight: bold;
+    border-radius: 5px;
+}
+
+/* Poner en gris con letras negras el módulo padre y los módulos hijos del submenú verdes con letra blanca */
+.menu-open>.nav-link,
+.menu-open>.nav-link.active {
+    background: rgba(255, 255, 255, 0.7) !important;
+    color: #222 !important;
+    backdrop-filter: blur(2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: background 0.3s, color 0.3s;
+}

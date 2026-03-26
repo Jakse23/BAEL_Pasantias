@@ -1,0 +1,339 @@
+{% extends 'home.html' %}
+{% block content %}
+{% load static %}
+{% load widget_tweaks %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card custom-card-height mb-3 mt-3 me-3 ms-3">
+            <div class="card-header">
+                <h5 class="card-title">Planes de Trabajo</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <button class="btn btn-md btn-primary" data-bs-toggle="modal" data-bs-target="#addModal">
+                        <i class="fas fa-plus"></i> <strong>Añadir Plan de Trabajo</strong>
+                    </button>
+                </div>
+                <table id="datatable-workplan" class="table responsive">
+                    <thead>
+                        <tr>
+                            <th class="centered">Nombre</th>
+                            <th class="centered">Sistema</th>
+                            <th class="centered">Precio Total</th> <!-- Nueva columna -->
+                            <th class="centered">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if work_plans %}
+                        {% for plan in work_plans %}
+                        <tr data-id="{{ plan.id }}">
+                            <td>{{ plan.plan_name }}</td>
+                            <td>{{ plan.fk_component.fk_system.acronym }} - {{ plan.fk_component.component }}</td>
+                            <td>{{ plan.total_labor_cost }}</td> <!-- Mostrar suma -->
+                            <td>
+                                {% if not plan.status %}
+                                <button class="btn btn-sm btn-success add-task-btn" data-plan-id="{{ plan.id }}">
+                                    <i class="fas fa-plus"></i> Añadir Tarea
+                                </button>
+                                <button class="btn btn-sm btn-primary btn-edit-workplan" data-id="{{ plan.id }}"
+                                    data-name="{{ plan.plan_name }}" data-system="{{ plan.fk_component.fk_system.id }}"
+                                    data-component="{{ plan.fk_component.id }}">
+                                    <i class="fas fa-pencil-alt"></i> Editar
+                                </button>
+                                <button class="btn btn-sm btn-danger btn-delete-workplan" data-id="{{ plan.id }}">
+                                    <i class="fas fa-trash-alt"></i> Borrar
+                                </button>
+                                {% endif %}
+                                <button class="btn btn-sm btn-info show-tasks-btn" data-plan-id="{{ plan.id }}">
+                                    <i class="fas fa-list"></i> Ver Tareas
+                                </button>
+                                {% if plan.status %}
+                                <span class="badge bg-secondary ms-2">Cerrado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Añadir Plan de Trabajo -->
+<div class="modal fade" id="addModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form id="add-form" method="post" action="{% url 'work_plan:work_plan_create' %}">
+            {% csrf_token %}
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Añadir Plan de Trabajo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="plan_name">Nombre del Plan de Trabajo</label>
+                    {{ form.plan_name|add_class:"form-control mb-3" }}
+                    <label for="plan_system">Sistema</label>
+                    <select id="system-select" class="form-control mb-3">
+                        <option value="">Seleccione un sistema</option>
+                        {% for system in systems %}
+                        <option value="{{ system.id }}">{{ system.acronym }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="plan_component">Especialidad</label>
+                    <select id="component-select" name="fk_component" class="form-control mb-3" required>
+                        <option value="">Seleccione un componente</option>
+                        <!-- Opciones se llenan por JS -->
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para Editar Plan de Trabajo -->
+<div class="modal fade" id="editModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form id="edit-form">
+            {% csrf_token %}
+            <input type="hidden" name="id" id="edit-id">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Plan de Trabajo</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="edit-plan_name">Nombre del Plan de Trabajo</label>
+                    <input type="text" name="plan_name" id="edit-name" class="form-control mb-2"
+                        placeholder="Nombre del plan de trabajo" required>
+                    <label for="edit-system_plan">Sistema</label>
+                    <select id="edit-system" class="form-control mb-2">
+                        <option value="">Seleccione un sistema</option>
+                        {% for system in systems %}
+                        <option value="{{ system.id }}">{{ system.acronym }}</option>
+                        {% endfor %}
+                    </select>
+                    <label for="edit-component_plan">Componente</label>
+                    <select id="edit-component" name="fk_component" class="form-control mb-2" required>
+                        <option value="">Seleccione un componente</option>
+                        <!-- Opciones Dinámicas (JS) -->
+                    </select>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para Añadir Tarea -->
+<div class="modal fade" id="addTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form id="add-task-form" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="fk_work_plan" id="task-plan-id">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Añadir Tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label>Nombre de la Tarea</label>
+                    <input type="text" name="task" class="form-control mb-2" placeholder="Nombre de la tarea" required>
+                    <label>Requerimientos</label>
+                    <div class="input-group mb-3">
+                        <select name="requirements" id="requirements-select" class="form-select" multiple required>
+                            <!-- Opciones dinámicas (JS) -->
+                        </select>
+                        <span class="input-group-text bg-transparent border-0"
+                            style="padding:0; margin-left:6px;"></span>
+                        <button type="button" class="btn btn-outline-info rounded" id="btn-search-inventory"
+                            title="Consultar existencias en otras locaciones">
+                            <i class="fas fa-search"></i>
+                        </button>
+                    </div>
+                    <label>Fecha de Inicio</label>
+                    <input type="datetime-local" name="start_date" class="form-control mb-2" required>
+                    <label>Fecha de Finalización</label>
+                    <input type="datetime-local" name="end_date" class="form-control mb-2" required>
+                    <label>Costo de Mano de Obra</label>
+                    <input type="text" name="labor_cost" class="form-control mb-2" placeholder="Costo de Mano de Obra"
+                        required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para Consultar en otras Locaciones -->
+<div class="modal fade" id="searchInventoryModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Existencias en otras Locaciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="search-inventory-body">
+                <!-- Locaciones Dinámicas (JS) -->
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Tarea -->
+<div class="modal fade" id="editTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form id="edit-task-form" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="id" id="edit-task-id">
+            <input type="hidden" name="fk_work_plan" id="edit-task-plan-id">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label>Nombre de la Tarea</label>
+                    <input type="text" name="task" id="edit-task-name" class="form-control mb-2"
+                        placeholder="Nombre de la tarea" required>
+                    <label>Requerimientos</label>
+                    <select name="requirements" id="edit-task-requirements" class="form-control mb-2" required>
+                        <!-- Opciones Dinámicas (JS) -->
+                    </select>
+                    <label>Fecha de Inicio</label>
+                    <input type="datetime-local" name="start_date" id="edit-task-start" class="form-control mb-2"
+                        required>
+                    <label>Fecha de Finalización</label>
+                    <input type="datetime-local" name="end_date" id="edit-task-end" class="form-control mb-2" required>
+                    <label>Costo de Mano de Obra</label>
+                    <input type="text" name="labor_cost" class="form-control mb-2" placeholder="Costo de Mano de Obra"
+                        required>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para Terminar Tarea -->
+<div class="modal fade" id="finishTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form id="finish-task-form">
+            {% csrf_token %}
+            <input type="hidden" name="task_id" id="finish-task-id">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Terminar Tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="finish-observation-programed">Observación (Programado)</label>
+                    <textarea id="finish-observation-programed" name="observation_programada" class="form-control mb-3"
+                        required></textarea>
+
+                    <button type="button" class="btn btn-success mb-2" id="btn-add-no-programed">
+                        Registrar Mantenimiento No Programado
+                    </button>
+                    <div id="no-programed-container" style="display:none;">
+                        <label for="finish-observation-no-programed">Observación (No Programado)</label>
+                        <textarea id="finish-observation-no-programed" name="observation_no_programada"
+                            class="form-control mb-3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-success">Aceptar</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para Editar Observaciones -->
+<div class="modal fade" id="editObservationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <form id="edit-observation-form">
+            {% csrf_token %}
+            <input type="hidden" name="task_id" id="edit-observation-task-id">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Observaciones de la Tarea</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label for="edit-observation-programed">Observación (Programado)</label>
+                    <textarea id="edit-observation-programed" name="observation_programada" class="form-control mb-3"
+                        required></textarea>
+
+                    <button type="button" class="btn btn-success mb-2" id="btn-edit-no-programed">
+                        Registrar Mantenimiento No Programado
+                    </button>
+                    <div id="edit-no-programed-container" style="display:none;">
+                        <label for="edit-observation-no-programed">Observación (No Programado)</label>
+                        <textarea id="edit-observation-no-programed" name="observation_no_programada"
+                            class="form-control mb-3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Modal para Ver Observaciones -->
+<div class="modal fade" id="viewObservationModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Observaciones de la Tarea</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="view-observation-content"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'assets/css/custom_modal_work_plan.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+
+<!-- WORK_PLAN JS -->
+<script src="{% static 'assets/js/work_plan/alerts-work_plan.js' %}"></script>
+<script src="{% static 'assets/js/work_plan/csrf-token-work_plan.js' %}"></script>
+<script src="{% static 'assets/js/work_plan/datatable-work_plan.js' %}"></script>
+<script src="{% static 'assets/js/work_plan/search_inventory_work_plan.js' %}"></script>
+<script src="{% static 'assets/js/work_plan/show-data-edit-modal-work_plan.js' %}"></script>
+<script src="{% static 'assets/js/task/validate-task-dates.js' %}"></script>
+
+<!-- TASK JS -->
+<script src="{% static 'assets/js/task/add-task.js' %}"></script>
+<script src="{% static 'assets/js/task/alerts-task.js' %}"></script>
+<script src="{% static 'assets/js/task/show-data-edit-task-modal.js' %}"></script>
+<script src="{% static 'assets/js/task/end-task.js' %}"></script>
+<script src="{% static 'assets/js/task/show-hide-task.js' %}"></script>
+<script src="{% static 'assets/js/task/no-programed-observation-field.js' %}"></script>
+<script src="{% static 'assets/js/task/show-hide-no-programed-observation-field.js' %}"></script>
+
+
+
+{% endblock %}

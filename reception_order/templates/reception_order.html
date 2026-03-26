@@ -1,0 +1,84 @@
+{% extends 'home.html' %}
+{% block content %}
+{% load static %}
+{% load tz %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card custom-card-height mb-3 mt-3 me-3 ms-3">
+            <div class="card-header">
+                <h5 class="card-title">Órdenes de Recepción</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                </div>
+                <table id="datatable-reception_order" class="table responsive">
+                    <thead>
+                        <tr>
+                            <th class="centered">Fecha de Registro</th>
+                            <th class="centered">Estado</th>
+                            <th class="centered">Detalles</th>
+                            <th class="centered">Opciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in reception_order %}
+                        <tr data-id="{{ order.id }}">
+                            <td>{{ order.application_date|localtime|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                {{ order.get_status_display }}
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-info show-details-order-btn"
+                                    data-order-id="{{ order.id }}" data-bs-toggle="modal"
+                                    data-bs-target="#details-modal">
+                                    <i class="fas fa-list"></i>
+                                </button>
+                            </td>
+                            <td>
+                                {% if order.status != 2 %}
+                                <button class="btn btn-sm btn-danger btn-delete-order" data-id="{{ order.id }}">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                                <button class="btn btn-sm btn-warning btn-change-status" data-id="{{ order.id }}">
+                                    <i class="fas fa-exchange-alt"></i>
+                                </button>
+                                {% else %}
+                                <span class="badge bg-secondary ms-2">Cerrado</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal para Detalles de Orden -->
+<div class="modal fade" id="detailsOrderModal" tabindex="-1" aria-labelledby="detailsOrderModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="detailsOrderModalLabel">Detalles de la Orden de Recepción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body">
+                <div id="details-container">
+                    <!-- Detalles Dinámicos (JS) -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script src="{% static 'assets/js/reception_order/alerts-reception_order.js' %}"></script>
+<script src="{% static 'assets/js/reception_order/datatable-reception_order.js' %}"></script>
+<script src="{% static 'assets/js/reception_order/show-order-details-reception_order.js' %}"></script>
+<script src="{% static 'assets/js/reception_order/generate-reception-from-order.js' %}"></script>
+<script src="{% static 'assets/js/reception_order/change-order-status_reception_order.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,225 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Sistema de Mantenimiento</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="title" content="Sistema de Mantenimiento" />
+
+    <!-- jQuery -->
+    <script src="{% static 'assets/js/jquery-3.6.0.min.js' %}"></script>
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="{% static 'assets/bootstrap-5.3.6/css/bootstrap.css' %}" />
+    <link rel="stylesheet" href="{% static 'assets/bootstrap-5.3.6/css/bootstrap.min.css' %}" />
+
+    <!-- DataTables CSS -->
+    <link rel="stylesheet" href="{% static 'assets/datatables/css/jquery.dataTables.min.css' %}" />
+
+    <!-- AdminLTE CSS -->
+    <link rel="stylesheet" href="{% static 'assets/dist/css/adminlte.css' %}" />
+
+    <!-- Íconos de Font-Awesome -->
+    <link href="{% static 'assets/fontawesome/css/fontawesome.css' %}" rel="stylesheet" />
+    <link href="{% static 'assets/fontawesome/css/solid.css' %}" rel="stylesheet" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/home.css' %}" />
+
+    <!-- Select2 CSS -->
+    <link href="{% static 'assets/select2/css/select2.min.css' %}" rel="stylesheet" />
+
+</head>
+
+<body class="layout-fixed sidebar-expand-lg bg-body-tertiary">
+    <div class="app-wrapper">
+        <nav class="app-header navbar navbar-expand bg-body">
+            <div class="container-fluid">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" data-lte-toggle="sidebar" href="" role="button">
+                            <i class="fa-solid fa-bars"></i>
+                        </a>
+                    </li>
+                </ul>
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-lte-toggle="fullscreen">
+                            <i data-lte-icon="maximize" class="fa-solid fa-expand"></i>
+                            <i data-lte-icon="minimize" class="fa-solid fa-compress" style="display: none"></i>
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown user-menu">
+                        <a class="nav-link dropdown-toggle">
+                            <img src="{% static 'assets/img/dimadea.jpg' %}" class="user-image rounded-circle shadow"
+                                alt="User Image" />
+                            <span class="d-none d-md-inline">{{ first_name }} {{ last_name }}</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </nav>
+        <aside class="app-sidebar bg-body-secondary shadow" data-bs-theme="dark">
+            <div class="sidebar-brand">
+                <div href="" class="brand-link">
+                    <i class="fa-solid fa-plane-arrival custom-icon-color"></i>
+                    <span class="brand-text fw-light">DICEGESA</span>
+                </div>
+            </div>
+            <div class="sidebar-wrapper">
+                <nav class="mt-2">
+                    <ul class="nav sidebar-menu flex-column" role="menu" data-accordion="false">
+                        <li class="nav-item menu-open">
+                            <ul class="nav nav-treeview">
+                                <li class="nav-item">
+                                    <a href="{% url 'home:dashboard' %}"
+                                        class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                                        <i class="nav-icon fa-solid fa-warehouse"></i>
+                                        <p>Inicio</p>
+                                    </a>
+                                </li>
+                                <!-- Menú desplegable (Registro) -->
+                                <li
+                                    class="nav-item {% if request.resolver_match.url_name in 'component system maintenances' %}menu-open{% endif %}">
+                                    <a href="#"
+                                        class="nav-link {% if request.resolver_match.url_name in 'component system maintenances' %}active{% endif %}">
+                                        <i class="nav-icon fa-solid fa-jet-fighter"></i>
+                                        <p>
+                                            Mantenimiento
+                                            <i class="right fa-solid fa-angle-right toggle-icon"></i>
+                                        </p>
+                                    </a>
+                                    <ul class="nav nav-treeview">
+
+                                        <li class="nav-item">
+                                            <a href="{% url 'home:system' %}"
+                                                class="nav-link {% if request.resolver_match.url_name == 'system' %}active{% endif %}">
+                                                <i class="nav-icon fa-solid fa-plane-departure"></i>
+                                                <p>Sistemas</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{% url 'home:component' %}"
+                                                class="nav-link {% if request.resolver_match.url_name == 'component' %}active{% endif %}">
+                                                <i class="nav-icon fa-solid fa-gears"></i>
+                                                <p>Especialidades</p>
+                                            </a>
+                                        </li>
+                                        <li class="nav-item">
+                                            <a href="{% url 'home:work_plan' %}"
+                                                class="nav-link {% if request.resolver_match.url_name == 'maintenances' %}active{% endif %}">
+                                                <i class="nav-icon fa-solid fa-screwdriver-wrench"></i>
+                                                <p>Plan de Trabajo</p>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li
+                                    class="nav-item {% if request.resolver_match.url_name == 'inventory' %}menu-open{% endif %}">
+                                    <a href="#"
+                                        class="nav-link {% if request.resolver_match.url_name == 'inventory' %}active{% endif %}">
+                                        <i class="nav-icon fa-solid fa-truck-ramp-box"></i>
+                                        <p>
+                                            Abastecimiento
+                                            <i class="right fa-solid fa-angle-right toggle-icon"></i>
+                                        </p>
+                                    </a>
+                                    <ul class="nav nav-treeview">
+                                        <li class="nav-item">
+                                            <a href="{% url 'inventory:index' %}" class="nav-link">
+                                                <i class="nav-icon fa-solid fa-boxes-stacked"></i>
+                                                <p>Inventario</p>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <ul class="nav nav-treeview">
+                                        <li class="nav-item">
+                                            <a href="{% url 'home:purchase_order' %}" class="nav-link">
+                                                <i class="nav-icon fa-solid fa-file-invoice"></i>
+                                                <p>Órdenes de Compra</p>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <ul class="nav nav-treeview">
+                                        <li class="nav-item">
+                                            <a href="{% url 'home:requisition_order' %}" class="nav-link">
+                                                <i class="nav-icon fa-solid fa-file-invoice"></i>
+                                                <p>Órdenes de Requisición</p>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <ul class="nav nav-treeview">
+                                        <li class="nav-item">
+                                            <a href="{% url 'home:dispatch_order' %}" class="nav-link">
+                                                <i class="nav-icon fa-solid fa-file-invoice"></i>
+                                                <p>Órdenes de Despacho</p>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                    <ul class="nav nav-treeview">
+                                        <li class="nav-item">
+                                            <a href="{% url 'home:reception_order' %}" class="nav-link">
+                                                <i class="nav-icon fa-solid fa-file-invoice"></i>
+                                                <p>Órdenes de Recepción</p>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </li>
+                                <li class="nav-item">
+                                    <a href="{% url 'login:logout' %}" class="nav-link">
+                                        <i class="nav-icon fa-solid fa-right-to-bracket"></i>
+                                        <p>Cerrar Sesión</p>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </aside>
+        <main class="app-main">
+            {% block content %}
+
+            {% endblock %}
+        </main>
+
+        <footer class="app-footer">
+            <strong>
+                &copy; 2025&nbsp;
+                <span>DIMADEA</span>.
+            </strong>
+            Todos los derechos reservados.
+        </footer>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="{% static 'assets/bootstrap-5.3.6/js/bootstrap.bundle.min.js' %}"></script>
+
+    <!-- DataTables JS -->
+    <script src="{% static 'assets/datatables/js/jquery.dataTables.min.js' %}"></script>
+
+    <!-- AdminLTE JS -->
+    <script src="{% static 'assets/dist/js/adminlte.js' %}"></script>
+
+    <!-- SweetAlert -->
+    <script src="{% static 'assets/js/sweetalert2@11.js' %}"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static 'assets/js/sidebar-wrapper.js' %}"></script>
+
+    <!-- Select2 JS -->
+    <script src="{% static 'assets/select2/js/select2.min.js' %}"></script>
+
+    {% block extra_css %}
+    
+    {% endblock %}
+    
+    {% block extra_js %}
+    
+    {% endblock %}
+</body>
+
+</html>

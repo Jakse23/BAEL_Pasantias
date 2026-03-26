@@ -1,0 +1,239 @@
+{% extends "home.html" %}
+{% load static %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-12">
+        <div class="card custom-card-height mb-3 mt-3 me-3 ms-3">
+            <div class="card-header">
+                <h5 class="card-title">Inventario de Partes</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="data-container">
+                            <!-- Botón para añadir parte (opcional) -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <button class="btn btn-md btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#register-modal">
+                                    <i class="fas fa-plus"></i> <strong>Añadir Inventario</strong>
+                                </button>
+                            </div>
+                            <!-- Tabla -->
+                            <table id="datatable-inventory" class="table responsive"
+                                data-list-inventory-url="{% url 'inventory:index' %}">
+                                <thead>
+                                    <tr>
+                                        <th class="centered" scope="col">#</th>
+                                        <th class="centered" scope="col">Requerimiento</th>
+                                        <th class="centered" scope="col">Número de Parte</th>
+                                        <th class="centered" scope="col">Stock</th>
+                                        <th class="centered" scope="col">Nomenclatura</th>
+                                        <th class="centered" scope="col">CAGE</th>
+                                        <th class="centered" scope="col">ERRC</th>
+                                        <th class="centered" scope="col">UI</th>
+                                        <th class="centered" scope="col">SER</th>
+                                        <th class="centered" scope="col">Precio Unitario</th>
+                                        <th class="centered" scope="col">Total</th>
+                                        <th class="centered" scope="col">Locación</th>
+                                        <th class="centered" scope="col">Fecha</th>
+                                        <th class="centered" scope="col">Componente</th>
+                                        <th class="centered" scope="col">Existencia</th>
+                                        <!-- Existencia ANTES de Opciones -->
+                                        <th class="centered" scope="col">Opciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Aquí se cargarán los datos dinámicamente -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para añadir inventario -->
+<div class="modal fade" id="register-modal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="inventory-form" method="post">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="registerModalLabel">Añadir Inventario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="material_name" class="form-label">Requerimiento</label>
+                            <input type="text" class="form-control" id="material_name" name="material_name">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="part_number" class="form-label">Número de Parte</label>
+                            <input type="text" class="form-control" id="part_number" name="part_number" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="stock" class="form-label">Stock</label>
+                            <input type="text" class="form-control" id="stock" name="stock" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="nomenclature" class="form-label">Nomenclatura</label>
+                            <input type="text" class="form-control" id="nomenclature" name="nomenclature" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="cage" class="form-label">CAGE</label>
+                            <input type="text" class="form-control" id="cage" name="cage">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="errc" class="form-label">ERRC</label>
+                            <input type="text" class="form-control" id="errc" name="errc">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ui" class="form-label">UI</label>
+                            <input type="text" class="form-control" id="ui" name="ui">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="ser" class="form-label">SER</label>
+                            <input type="text" class="form-control" id="ser" name="ser">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="unit_price" class="form-label">Precio Unitario</label>
+                            <input type="number" step="0.01" class="form-control" id="unit_price" name="unit_price"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="total" class="form-label">Total</label>
+                            <input type="number" step="0.01" class="form-control" id="total" name="total" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="location" class="form-label">Locación</label>
+                            <input type="text" class="form-control" id="location" name="location">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="last_inv_date" class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="last_inv_date" name="last_inv_date" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="fk_component" class="form-label">Componente</label>
+                            <select class="form-control" id="fk_component" name="fk_component" required>
+                                <option value="">Seleccione un componente</option>
+                                {% for comp in components %}
+                                <option value="{{ comp.id }}">{{ comp.component }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <!-- En el formulario de añadir -->
+                        <div class="col-md-6">
+                            <label for="available_quantity" class="form-label">Existencia</label>
+                            <input type="number" class="form-control" id="available_quantity" name="available_quantity" min="0" required
+                                pattern="[0-9]*" inputmode="numeric">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar inventario -->
+<div class="modal fade" id="edit-modal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="edit-inventory-form" method="post">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editModalLabel">Editar Inventario</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="edit_id" name="id">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label for="edit_material_name" class="form-label">Requerimiento</label>
+                            <input type="text" class="form-control" id="edit_material_name" name="material_name">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_part_number" class="form-label">Número de Parte</label>
+                            <input type="text" class="form-control" id="edit_part_number" name="part_number" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_stock" class="form-label">Stock</label>
+                            <input type="text" class="form-control" id="edit_stock" name="stock" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_nomenclature" class="form-label">Nomenclatura</label>
+                            <input type="text" class="form-control" id="edit_nomenclature" name="nomenclature" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_cage" class="form-label">CAGE</label>
+                            <input type="text" class="form-control" id="edit_cage" name="cage">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_errc" class="form-label">ERRC</label>
+                            <input type="text" class="form-control" id="edit_errc" name="errc">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_ui" class="form-label">UI</label>
+                            <input type="text" class="form-control" id="edit_ui" name="ui">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_ser" class="form-label">SER</label>
+                            <input type="text" class="form-control" id="edit_ser" name="ser">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_unit_price" class="form-label">Precio Unitario</label>
+                            <input type="number" step="0.01" class="form-control" id="edit_unit_price" name="unit_price"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_total" class="form-label">Total</label>
+                            <input type="number" step="0.01" class="form-control" id="edit_total" name="total" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_location" class="form-label">Locación</label>
+                            <input type="text" class="form-control" id="edit_location" name="location">
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_last_inv_date" class="form-label">Fecha</label>
+                            <input type="date" class="form-control" id="edit_last_inv_date" name="last_inv_date"
+                                required>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="edit_fk_component" class="form-label">Componente</label>
+                            <select class="form-control" id="edit_fk_component" name="fk_component" required>
+                                <option value="">Seleccione un componente</option>
+                                {% for comp in components %}
+                                <option value="{{ comp.id }}">{{ comp.component }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <!-- En el formulario de editar -->
+                        <div class="col-md-6">
+                            <label for="edit_available_quantity" class="form-label">Existencia</label>
+                            <input type="number" class="form-control" id="edit_available_quantity" name="available_quantity" min="0"
+                                required pattern="[0-9]*" inputmode="numeric">
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- CUSTOM JS -->
+<script src="{% static 'assets/js/inventory.js' %}"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+{% endblock %}

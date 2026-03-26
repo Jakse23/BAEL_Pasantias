@@ -1,0 +1,195 @@
+{% extends 'home.html' %}
+{% block content %}
+{% load static %}
+{% load widget_tweaks %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card custom-card-height mb-3 mt-3 me-3 ms-3">
+            <div class="card-header">
+                <h5 class="card-title">Mantenimientos</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="data-container">
+                            <!-- Botones -->
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <!-- Botón para abrir el modal -->
+                                <button class="btn btn-md btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#register-modal">
+                                    <i class="fa-solid fa-plus"></i> <strong>Añadir Mantenimiento</strong>
+                                </button>
+                            </div>
+
+                            <!-- Tabla -->
+                            <table id="datatable-maintenances" class="table responsive">
+                                <thead>
+                                    <tr>
+                                        <th class="centered" scope="col">#</th>
+                                        <th class="centered" scope="col">Fecha y Hora</th>
+                                        <th class="centered" scope="col">Progreso</th>
+                                        <th class="centered" scope="col">Nivel de Mantenimiento</th>
+                                        <th class="centered" scope="col">Siglas</th>
+                                        <th class="centered" scope="col">Opciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for maintenance in maintenances %}
+                                    <tr>
+                                        <td>{{ forloop.counter }}</td>
+                                        <td>{{ maintenance.datetime|date:"d/m/Y, h:iA" }}</td>
+                                        <td>{{ maintenance.prog_percent }} %</td>
+                                        <td>{{ maintenance.fk_maintenance_level }}</td>
+                                        <td>{{ maintenance.fk_system.acronym }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary edit-maintenance-button"
+                                                data-id="{{ maintenance.id }}">
+                                                <i class="fas fa-pencil-alt"></i>
+                                            </button>
+                                            <button class="btn btn-danger btn-sm delete-maintenance-button"
+                                                data-id="{{ maintenance.id }}">
+                                                <i class="fas fa-trash-alt"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="register-modal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerModalLabel">Añadir Mantenimiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="maintenance-form" action="{% url 'maintenances:maintenance_create' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <label for="datetime">Fecha y hora</label>
+                    <div class="mb-3">
+                        {{ maintenance_create_form.datetime|add_class:"form-control" }}
+                    </div>
+                    <label for="prog_percent">Progreso</label>
+                    <div class="mb-3">
+                        {{ maintenance_create_form.prog_percent|add_class:"form-control" }}
+                    </div>
+                    <label for="fk_maintenance_level">Nivel de mantenimiento</label>
+                    <div class="mb-3">
+                        {{ maintenance_create_form.fk_maintenance_level|add_class:"form-select" }}
+                    </div>
+                    <label for="fk_system">Sistema</label>
+                    <div class="mb-3">
+                        <select id="fk_system" name="fk_system" class="form-select">
+                            <option value="" selected>Seleccionar un sistema</option>
+                            {% for system in systems %}
+                            <option value="{{ system.id }}">{{ system.acronym }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <label for="components">Especialidad</label>
+                    <div class="mb-3">
+                        <select id="fk_component" name="components" class="form-select" multiple>
+                            <option value="">Seleccione la Especialidad</option>
+                            <!-- Las opciones se llenarán dinámicamente -->
+                        </select>
+                    </div>
+                    <div id="observation-container" class="mt-3">
+                        <!-- Aquí se generarán dinámicamente los campos de observación -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de edición -->
+<div class="modal fade" id="edit-maintenance-modal" tabindex="-1" aria-labelledby="editMaintenanceModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editMaintenanceModalLabel">Editar Mantenimiento</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="edit-maintenance-form" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="edit-maintenance-id" name="maintenance_id">
+
+                    <label for="edit-datetime">Fecha y Hora</label>
+                    <div class="mb-3">
+                        <input type="datetime-local" id="edit-datetime" name="edit_datetime" class="form-control" required>
+                    </div>
+
+                    <label for="edit-prog-percent">Progreso</label>
+                    <div class="mb-3">
+                        <input type="text" id="edit-prog-percent" name="edit_prog_percent" class="form-control"
+                            maxlength="5">
+                    </div>
+
+                    <label for="edit-fk-maintenance-level">Nivel de Mantenimiento</label>
+                    <div class="mb-3">
+                        <select id="edit-fk-maintenance-level" name="fk_maintenance_level" class="form-select">
+                            {% for level in maintenance_levels %}
+                            <option value="{{ level.id }}">Nivel {{ level.level }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <label for="edit-fk-system">Sistema</label>
+                    <div class="mb-3">
+                        <select id="edit-fk-system" name="fk_system_display" class="form-select" disabled>
+                            {% for system in systems %}
+                            <option value="{{ system.id }}" {% if system.id == selected_system_id %}selected{% endif %}>
+                                {{ system.acronym }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <input type="hidden" name="fk_system" value="{{ selected_system_id }}">
+                    </div>
+                    <!-- <div class="mb-3">
+                        <select id="edit-fk-system" name="fk_system" class="form-select">
+                            {% for system in systems %}
+                            <option value="{{ system.id }}">{{ system.acronym }}</option>
+                            {% endfor %}
+                        </select>
+                    </div> -->
+                    <div class="mb-3">
+                        <select id="fk_component-edit" name="components" class="form-select" multiple>
+                            <option value="">Seleccione la Especialidad</option>
+                            <!-- Las opciones se llenarán dinámicamente -->
+                        </select>
+                    </div>
+                    <div id="edit-observation-container" class="mt-3">
+                        <!-- Aquí se generarán dinámicamente los campos de observación -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<script src="{% static 'assets/js/maintenances.js' %}"></script>
+<script src="{% static 'assets/js/maintenances_delete.js' %}"></script>
+
+{% endblock %}

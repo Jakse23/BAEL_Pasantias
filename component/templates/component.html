@@ -1,0 +1,185 @@
+{% extends 'home.html' %}
+{% block content %}
+{% load static %}
+{% load widget_tweaks %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card custom-card-height mb-3 mt-3 me-3 ms-3">
+            <div class="card-header">
+                <h5 class="card-title">Especialidades</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="data-container">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <button class="btn btn-md btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#register-modal">
+                                    <i class="fas fa-plus"></i> <strong>Añadir Especialidad</strong>
+                                </button>
+                            </div>
+                            <table id="datatable-component" class="table responsive">
+                                <thead>
+                                    <tr>
+                                        <th class="centered">Siglas</th>
+                                        <th class="centered">Cantidad de Especialidades</th>
+                                        <th class="centered">Opciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for group in grouped_components %}
+                                    <tr data-system-id="{{ group.system.id }}">
+                                        <td>{{ group.system.acronym }}</td>
+                                        <td>{{ group.count }}</td>
+                                        <td>
+                                            <button class="btn btn-sm btn-primary details-btn"
+                                                data-system-id="{{ group.system.id }}">
+                                                <i class="fas fa-chevron-down"></i> Ver Especialidades
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Observaciones (Mantenimientos Programados y No Programados) -->
+<div class="modal fade" id="observations-modal" tabindex="-1" aria-labelledby="observationsModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="observationsModalLabel">Observaciones</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="observations-container">
+                    <!-- Observaciones Dinámicas (JS) -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Añadir Especialidad -->
+<div class="modal fade" id="register-modal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerModalLabel">Añadir Especialidad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="component-form" action="{% url 'component:component_create' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <label for="fk_system">Sistema</label>
+                    <div class="mb-3">
+                        <select id="fk_system" name="fk_system" class="form-select">
+                            <option value="" selected>Seleccionar la sigla</option>
+                            {% for system in all_systems %}
+                            <option value="{{ system.id }}">{{ system.acronym }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <label for="component">Especialidad</label>
+                    <div class="mb-3">
+                        {{ component_create_form.component|add_class:"form-control" }}
+                    </div>
+                    <label for="category">Prioridad</label>
+                    <div class="mb-3">
+                        {{ component_create_form.category|add_class:"form-select" }}
+                    </div>
+                    <label for="status">Horas de vuelo</label>
+                    <div class="mb-3">
+                        {{ component_create_form.status|add_class:"form-control numeric-only" }}
+                    </div>
+                    <label for="utility_life">Vida Útil</label>
+                    <div class="mb-3">
+                        {{ component_create_form.utility_life|add_class:"form-control numeric-only" }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Editar Especialidad -->
+<div class="modal fade" id="edit-modal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Editar Especialidad</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="edit-component-form" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" id="edit-component-id" name="component_id">
+                    <label for="edit-fk-system">Sistema</label>
+                    <div class="mb-3">
+                        <select id="edit-fk-system" name="fk_system" class="form-select">
+                            {% for system in all_systems %}
+                            <option value="{{ system.id }}">{{ system.acronym }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <label for="edit-component">Especialidad</label>
+                    <div class="mb-3">
+                        <input type="text" id="edit-component" name="component" class="form-control">
+                    </div>
+                    <label for="edit-category">Prioridad</label>
+                    <div class="mb-3">
+                        <select id="edit-category" name="category" class="form-select">
+                            {% for value, label in LEVEL_CHOICES %}
+                            <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <label for="edit-status">Horas de vuelo</label>
+                    <div class="mb-3">
+                        <input type="text" id="edit-status" name="status" class="form-control numeric-only"
+                            maxlength="10">
+                    </div>
+                    <label for="edit-utility-life">Vida Útil</label>
+                    <div class="mb-3">
+                        <input type="text" id="edit-utility-life" name="utility_life" class="form-control numeric-only"
+                            maxlength="10">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+
+<!-- CUSTOM JS -->
+<script src="{% static 'assets/js/component/alerts-component.js' %}"></script>
+<script src="{% static 'assets/js/component/csrf-token-component.js' %}"></script>
+<script src="{% static 'assets/js/component/datatable-component.js' %}"></script>
+<script src="{% static 'assets/js/component/numeric-only-inputs-component.js' %}"></script>
+<script src="{% static 'assets/js/component/select2-component.js' %}"></script>
+<script src="{% static 'assets/js/component/show-data-edit-modal-component.js' %}"></script>
+<script src="{% static 'assets/js/component/show-observations-component.js' %}"></script>
+
+{% endblock %}

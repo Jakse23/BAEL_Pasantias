@@ -1,0 +1,259 @@
+{% extends 'home.html' %}
+{% block content %}
+{% load static %}
+{% load widget_tweaks %}
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card custom-card-height mb-3 mt-3 me-3 ms-3">
+            <div class="card-header">
+                <h5 class="card-title">Sistemas de Armas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="data-container">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <button class="btn btn-md btn-primary" data-bs-toggle="modal"
+                                    data-bs-target="#register-modal">
+                                    <i class="fas fa-plus"></i> <strong>Añadir Sistema</strong>
+                                </button>
+                                <div class="d-flex align-items-center">
+                                    <button id="open-generate-pdf-modal" class="btn btn-danger" data-bs-toggle="modal"
+                                        data-bs-target="#generate-pdf-modal">
+                                        <i class="fas fa-file-pdf"></i> <strong>Generar Reporte PDF</strong>
+                                    </button>
+                                </div>
+                            </div>
+                            <table id="datatable-system" class="table responsive"
+                                data-list-system-url="{% url 'system:list_system' %}">
+                                <thead>
+                                    <tr>
+                                        <th class="centered" scope="col">#</th>
+                                        <th class="centered" scope="col">Grupo Áereo</th>
+                                        <th class="centered" scope="col">Sistema de Armas</th>
+                                        <th class="centered" scope="col">Siglas</th>
+                                        <th class="centered" scope="col">Condición</th>
+                                        <th class="centered" scope="col">H.T.V.L</th>
+                                        <th class="centered" scope="col">Vida Útil</th>
+                                        <th class="centered" scope="col">Opciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Añadir Sistemas -->
+<div class="modal fade" id="register-modal" tabindex="-1" aria-labelledby="registerModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="registerModalLabel">Añadir Sistema</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="system-form" action="{% url 'system:system_create' %}" method="post">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <label for="fk_group">Grupo</label>
+                    <div class="mb-3">
+                        <select id="fk_group" name="fk_group" class="form-select select2">
+                            <option value="" selected>Seleccione el grupo</option>
+                            {% for group in groups %}
+                            <option value="{{ group.id }}">{{ group }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <label for="system">Sistema</label>
+                    <div class="mb-3">
+                        {{ system_create_form.system|add_class:"form-control" }}
+                    </div>
+                    <label for="acronym">Siglas</label>
+                    <div class="mb-3">
+                        {{ system_create_form.acronym|add_class:"form-control" }}
+                    </div>
+                    <label for="condition">Condición</label>
+                    <div class="mb-3">
+                        {{ system_create_form.condition|add_class:"form-select" }}
+                    </div>
+                    <label for="status">Estado</label>
+                    <div class="mb-3">
+                        {{ system_create_form.status|add_class:"form-control numeric-only" }}
+                    </div>
+                    <label for="utility_life">Vida Útil</label>
+                    <div class="mb-3">
+                        {{ system_create_form.utility_life|add_class:"form-control numeric-only" }}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Editar Sistemas -->
+<div class="modal fade" id="edit-modal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editModalLabel">Editar Sistema</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="edit-system-form" action="{% url 'system:system_update' 0 %}" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="edit-system-id" name="system_id">
+                <div class="modal-body">
+                    <label for="edit-fk-group">Grupo</label>
+                    <div class="mb-3">
+                        <select id="edit-fk-group" name="fk_group" class="form-select select2">
+                            {% for group in groups %}
+                            <option value="{{ group.id }}">{{ group }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <label for="edit-system">Sistema</label>
+                    <div class="mb-3">
+                        <input type="text" id="edit-system" name="system" class="form-control">
+                    </div>
+                    <label for="edit-acronym">Siglas</label>
+                    <div class="mb-3">
+                        <input type="text" id="edit-acronym" name="acronym" class="form-control">
+                    </div>
+                    <label for="edit-condition">Condición</label>
+                    <div class="mb-3">
+                        <select id="edit-condition" name="condition" class="form-select">
+                            <option value="0">Disponible</option>
+                            <option value="1">Indisponible</option>
+                            <option value="2">Descartada</option>
+                        </select>
+                    </div>
+                    <label for="edit-status">Estado</label>
+                    <div class="mb-3">
+                        <input type="text" id="edit-status" name="status" class="form-control numeric-only"
+                            maxlength="10">
+                    </div>
+                    <label for="edit-utility-life">Vida Útil</label>
+                    <div class="mb-3">
+                        <input type="text" id="edit-utility-life" name="utility_life" class="form-control numeric-only"
+                            maxlength="10">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Generar PDF -->
+<div class="modal fade" id="generate-pdf-modal" tabindex="-1" aria-labelledby="generatePdfModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="generatePdfModalLabel">Generar Reporte PDF</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="generate-pdf-form">
+                    <!-- Filtro por Grupo -->
+                    <div class="mb-3">
+                        <label for="filter-group" class="form-label">Grupo:</label>
+                        <select id="filter-group" class="form-select select2" multiple>
+                            {% for group in groups %}
+                            <option value="{{ group.id }}" data-condition="{{ group.condition }}">{{ group }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Filtro por Sistema -->
+                    <div class="mb-3">
+                        <label for="filter-system" class="form-label">Sistema:</label>
+                        <select id="filter-system" class="form-select select2" multiple>
+                            {% for system in systems %}
+                            <option value="{{ system.id }}">{{ system.system }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Filtro por Siglas (Oculto) -->
+                    <div class="mb-3 d-none">
+                        <label for="filter-acronym" class="form-label">Siglas:</label>
+                        <select id="filter-acronym" class="form-select select2">
+                            <option value="">Todos</option>
+                            {% for system in systems %}
+                            <option value="{{ system.acronym }}">{{ system.acronym }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Filtro por Condición -->
+                    <div class="mb-3">
+                        <label for="filter-condition" class="form-label">Filtrar por Condición:</label>
+                        <select id="filter-condition" class="form-select">
+                            <option value="">Todos</option>
+                            <option value="0">Disponible</option>
+                            <option value="1">Indisponible</option>
+                            <option value="2">Descartada</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button id="generate-pdf-button" class="btn btn-danger" onclick="generateSystemPDF()">
+                    <i class="fas fa-file-pdf"></i> Generar PDF
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para Mostrar Observaciones -->
+<div class="modal fade" id="observations-modal" tabindex="-1" aria-labelledby="observationsModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="observationsModalLabel">Observaciones del
+                    Sistema</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="observations-container">
+                    <!-- Observaciones Dinámicas (JS) -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+
+<!-- CUSTOM JS -->
+<script src="{% static 'assets/js/system/alerts-system.js' %}"></script>
+<script src="{% static 'assets/js/system/csrf-token-system.js' %}"></script>
+<script src="{% static 'assets/js/system/datatable-system.js' %}"></script>
+<script src="{% static 'assets/js/system/generate-pdf-system.js' %}"></script>
+<script src="{% static 'assets/js/system/letterhead.js' %}"></script>
+<script src="{% static 'assets/js/system/numeric-only-inputs-system.js' %}"></script>
+<script src="{% static 'assets/js/system/signature.js' %}"></script>
+<script src="{% static 'assets/js/system/select2-system.js' %}"></script>
+<script src="{% static 'assets/js/system/show-data-edit-modal-system.js' %}"></script>
+
+{% endblock %}

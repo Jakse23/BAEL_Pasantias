@@ -1,0 +1,68 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Iniciar Sesión</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="title" content="Iniciar Sesión" />
+    <!-- AdminLTE CSS -->
+    <link rel="stylesheet" href="{% static 'assets/dist/css/adminlte.css' %}" />
+
+    <!-- Íconos de Font-Awesome -->
+    <link href="{% static 'assets/fontawesome/css/fontawesome.css' %}" rel="stylesheet" />
+    <link href="{% static 'assets/fontawesome/css/solid.css' %}" rel="stylesheet" />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'assets/css/login.css' %}" />
+</head>
+<body class="login-page bg-body-secondary">
+    <div class="overlay">
+    </div>
+    <div class="login-box">
+        <div class="login-logo">
+            <a id="login-title">
+                <i class="fa-solid fa-plane-up"></i>
+                <b id="system-title">DICEGESA</b>
+                <img id="amb-shield" src="{% static 'assets/dist/assets/img/amb.png' %}" />
+            </a>
+        </div>
+        <div class="card">
+            <div class="card-body login-card-body">
+                <p class="login-box-msg">Iniciar Sesión</p>
+                <form id="login-form" method="post">
+                    {% csrf_token %}
+                    <div class="input-group mb-3">
+                        <div class="input-group-text"><i class="fa-solid fa-user"></i></div>
+                        <input type="text" name="username" class="form-control" placeholder="Usuario" required />
+                    </div>
+                    <div class="input-group mb-3">
+                        <div class="input-group-text"><i class="fa-solid fa-lock"></i></div>
+                        <input type="password" name="password" id="password" class="form-control"
+                            placeholder="Contraseña" required />
+                        <button type="button" class="btn btn-outline-secondary" id="togglePassword">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <div class="row">
+                        <div class="col-12 d-flex justify-content-center">
+                            <button type="submit" class="btn btn-success d-flex align-items-center">
+                                Ingresar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+
+<!-- Sweet Alert -->
+<script src="{% static 'assets/js/sweetalert2@11.js' %}"></script>
+
+<!-- Custom JS -->
+<script src="{% static 'assets/js/login/manage-access-login.js' %}"></script>
+<script src="{% static 'assets/js/login/show-hide-password-login.js' %}"></script>
+
+</html>
