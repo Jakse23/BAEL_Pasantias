@@ -1,119 +1,48 @@
 {% extends 'home.html' %}
-{% block content %}
 {% load static %}
 
+{% block content %}
 <div class="app-content-header">
     <div class="container-fluid">
         <div class="row">
             <div class="col-sm-6">
-                <h3 class="mb-0">Inicio</h3>
+                <h3 class="mb-0">Panel de Control de Flota</h3>
             </div>
         </div>
     </div>
 </div>
+
 <div class="app-content">
     <div class="container-fluid">
-        <div class="row">
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon text-bg-primary shadow-sm">
-                        <i class="fa-solid fa-plane"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Sistemas en Nivel 1</span>
-                        <span class="info-box-number">
-                            {{ level_counts.level_1 }}
-                        </span>
-                    </div>
+        <!-- Contenedor para el contenido dinámico -->
+        <div id="fleetContent">
+            <!-- Cartas principales (visibles por defecto) -->
+            <div class="main-dashboard-cards" id="mainCards">
+                <div class="dashboard-card card-efx" data-fleet-category="transporte" style="cursor: pointer;">
+                    <i class="fas fa-plane card-icon" style="font-size: 48px; color: #00d2ff;"></i>
+                    <h2 style="margin-top: 16px; color: #ffffff;">Transporte</h2>
+                    <p style="color: #7a8fa3; text-align: center;">Estratégico y Táctico.</p>
                 </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon text-bg-success shadow-sm">
-                        <i class="fa-solid fa-plane"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Sistemas en Nivel 2</span>
-                        <span class="info-box-number">
-                            {{ level_counts.level_2 }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon text-bg-warning shadow-sm">
-                        <i class="fa-solid fa-plane"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Sistemas en Nivel 3</span>
-                        <span class="info-box-number">
-                            {{ level_counts.level_3 }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6 col-md-3">
-                <div class="info-box">
-                    <span class="info-box-icon text-bg-danger shadow-sm">
-                        <i class="fa-solid fa-plane"></i>
-                    </span>
-                    <div class="info-box-content">
-                        <span class="info-box-text">Sistemas en Overhaul</span>
-                        <span class="info-box-number">
-                            {{ level_counts.level_4 }}
-                        </span>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="card custom-card-height">
-                    <div class="card-header">
-                        <h5 class="card-title">Sistemas de Armas</h5>
-                    </div>
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-12">
-                                <div id="data-container">
 
-                                    <!-- Tabla -->
-                                    <table id="datatable-system-dash" class="table responsive" 
-                                    data-list-system-dash-url="{% url 'home:list' %}">
-                                        <thead>
-                                            <tr>
-                                                <th>Grupo Áereo</th>
-                                                <th>Sistema de Armas</th>
-                                                <th>Siglas</th>
-                                                <th>Condición</th>
-                                                <th>Nivel de Mantenimiento</th>
-                                                <th>H.T.V.L</th>
-                                                <th>Progreso hasta Inspección</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                <div class="dashboard-card card-efx" data-fleet-category="combate" style="cursor: pointer;">
+                    <i class="fas fa-fighter-jet card-icon" style="font-size: 48px; color: #ff5252;"></i>
+                    <h2 style="margin-top: 16px; color: #ffffff;">Combate</h2>
+                    <p style="color: #7a8fa3; text-align: center;">Cazas-Superioridad Aérea/Operaciones Especiales
+                        .</p>
+                </div>
+
+                <div class="dashboard-card card-efx" data-fleet-category="ala-rotativa" style="cursor: pointer;">
+                    <i class="fas fa-helicopter card-icon" style="font-size: 48px; color: #00e676;"></i>
+                    <h2 style="margin-top: 16px; color: #ffffff;">Ala Rotatoria</h2>
+                    <p style="color: #7a8fa3; text-align: center;">Táctico y transporte.</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-
-{% endblock %}
+{% endblock content %}
 
 {% block extra_js %}
 <script src="{% static 'assets/js/dashboard/redirect-dashboard.js' %}"></script>
-<script src="{% static 'assets/js/dashboard/list-system-in-dashboard.js' %}"></script>
-<script src="{% static 'assets/js/dashboard/datatable-dashboard.js' %}"></script>
+{% endblock extra_js %}
 
-{% endblock %}

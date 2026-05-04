@@ -1,0 +1,69 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block content %}
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">{{ title }} - C-130 Hércules</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="system" class="form-label">Tipo de Aeronave</label>
+                            <input type="text" name="system" id="system" class="form-control" value="C-130HV" readonly>
+                            <small class="text-muted">El tipo está fijado como C-130HV</small>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="acronym" class="form-label">Serial / Matrícula *</label>
+                            <input type="text" name="acronym" id="acronym" class="form-control" value="{{ c130.acronym|default:'' }}" required>
+                            <small class="text-muted">Ejemplo: FAV 4409 (9508)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="condition" class="form-label">Condición</label>
+                            <select name="condition" id="condition" class="form-select">
+                                <option value="0" {% if c130.condition == 0 %}selected{% endif %}>Operativo</option>
+                                <option value="1" {% if c130.condition == 1 %}selected{% endif %}>En Mantenimiento</option>
+                                <option value="2" {% if c130.condition == 2 %}selected{% endif %}>Inoperativo</option>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="utility_life" class="form-label">Vida Útil (horas)</label>
+                            <input type="number" name="utility_life" id="utility_life" class="form-control" value="{{ c130.utility_life|default:'0' }}">
+                            <small class="text-muted">Horas de vuelo acumuladas</small>
+                        </div>
+                    </div>
+                    
+                    <input type="hidden" name="status" value="0">
+                    <input type="hidden" name="fk_group_id" value="3">
+                    
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar
+                        </button>
+                        <a href="{% url 'home:c130_list' %}?categoria={{ categoria }}" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

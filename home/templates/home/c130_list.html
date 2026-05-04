@@ -1,0 +1,199 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block content %}
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Gestión de C-130 Hércules</h3>
+            </div>
+            <div class="col-sm-6 header-actions">
+                <a href="{% url 'home:c130_create' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Agregar Aeronave
+                </a>
+                <a href="javascript:void(0);" onclick="volverATransporte()" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver a Transporte
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}" style="display: none;" data-message="{{ message|escapejs }}" data-tags="{{ message.tags }}">
+                    {{ message }}
+                    <button type="button" class="btn-close" onclick="this.parentElement.remove()">×</button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-plane"></i> Flota C-130 Hércules Venezuela</h4>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th style="display: none;">ID</th>
+                                <th>Serial/Matrícula</th>
+                                <th>Condición</th>
+                                <th>Horas Acumuladas</th>
+                                <th>Horas Totales</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c130 in c130_list %}
+                            <tr>
+                                <td style="display: none;">{{ c130.id }}</td>
+                                <td>
+                                    <a href="{% url 'home:c130_detail' c130.id %}" class="matricula-link">
+                                        {{ c130.acronym }}
+                                        <i class="fas fa-external-link-alt"></i>
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if c130.condition == 0 %}
+                                        <span class="badge status-operativo">Operativo</span>
+                                    {% elif c130.condition == 1 %}
+                                        <span class="badge status-mantenimiento">En Mantenimiento</span>
+                                    {% elif c130.condition == 2 %}
+                                        <span class="badge status-inoperativo">Inoperativo</span>
+                                    {% else %}
+                                        <span class="badge status-desconocido">Desconocido</span>
+                                    {% endif %}
+                                </td>
+                                <td class="horas-acumuladas">
+                                    {% with acumulado=c130.utility_life|default:0 %}
+                                        {% if acumulado <= 5000 %}
+                                            <span class="badge horas-verde">{{ acumulado|floatformat:"0" }} hrs</span>
+                                        {% elif acumulado >= 7000 and acumulado < 10000 %}
+                                            <span class="badge horas-amarillo">{{ acumulado|floatformat:"0" }} hrs</span>
+                                        {% elif acumulado >= 12000 %}
+                                            <span class="badge horas-alerta">{{ acumulado|floatformat:"0" }} hrs ⚠ EXCEDIDO</span>
+                                        {% else %}
+                                            <span class="badge status-desconocido">{{ acumulado|floatformat:"0" }} hrs</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td>
+                                    <span class="badge horas-totales">12,000 hrs</span>
+                                </td>
+                                <td>
+                                    <a href="{% url 'home:c130_update' c130.id %}" class="btn btn-sm btn-warning">
+                                        <i class="fas fa-edit"></i> Editar
+                                    </a>
+                                    <!-- Botón Eliminar con formulario y confirmación -->
+                                    <form method="POST" action="{% url 'home:c130_delete' c130.id %}" class="d-inline-block delete-form" id="delete-form-{{ c130.id }}">
+                                        {% csrf_token %}
+                                        <button type="button" class="btn btn-sm btn-danger btn-delete" data-id="{{ c130.id }}" data-matricula="{{ c130.acronym }}">
+                                            <i class="fas fa-trash"></i> Eliminar
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center">No hay aeronaves C-130 registradas</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- SweetAlert2 CDN -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    function volverATransporte() {
+        sessionStorage.setItem('categoria_abierta', 'transporte');
+        window.location.href = '/home/dashboard/';
+    }
+
+    // Manejar eliminación con SweetAlert2
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteButtons = document.querySelectorAll('.btn-delete');
+        
+        deleteButtons.forEach(function(button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                const matricula = this.getAttribute('data-matricula');
+                const id = this.getAttribute('data-id');
+                const form = document.getElementById(`delete-form-${id}`);
+                
+                Swal.fire({
+                    title: '¿Eliminar aeronave?',
+                    html: `Estás a punto de eliminar la aeronave <strong>${matricula}</strong>.<br><br>Esta acción no se puede deshacer.`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
+                    confirmButtonText: '<i class="fas fa-trash"></i> Sí, eliminar',
+                    cancelButtonText: '<i class="fas fa-times"></i> Cancelar',
+                    reverseButtons: true
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Eliminando...',
+                            text: 'Por favor espera',
+                            icon: 'info',
+                            showConfirmButton: false,
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                                form.submit();
+                            }
+                        });
+                    }
+                });
+            });
+        });
+        
+        // Mostrar mensajes de Django con SweetAlert
+        const messages = document.querySelectorAll('.alert');
+        messages.forEach(function(message) {
+            const msgText = message.getAttribute('data-message') || message.innerText;
+            const msgTags = message.getAttribute('data-tags') || 'info';
+            
+            let icon = 'info';
+            let title = 'Aviso';
+            if (msgTags === 'success') {
+                icon = 'success';
+                title = '¡Éxito!';
+            } else if (msgTags === 'error') {
+                icon = 'error';
+                title = 'Error';
+            }
+            
+            Swal.fire({
+                title: title,
+                text: msgText,
+                icon: icon,
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Aceptar',
+                timer: 3000,
+                timerProgressBar: true
+            });
+            
+            message.style.display = 'none';
+        });
+    });
+</script>
+
+<style>
+
+</style>
+{% endblock %}

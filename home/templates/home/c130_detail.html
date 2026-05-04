@@ -1,0 +1,286 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Citas directas de CSS y JS -->
+<link rel="stylesheet" href="{% static 'assets/css/c130_detail.css' %}">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="{% static 'assets/js/c130_detail.js' %}"></script>
+
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Detalle de Aeronave</h3>
+            </div>
+            <div class="col-sm-6" style="text-align: right;">
+                <a href="{% url 'home:c130_list' %}" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="aircraft-title-detalle">
+            <div>
+                <h2>{{ c130.acronym|default:"Sin matrícula" }}</h2>
+                <p>
+                    {% if c130.condition == 0 %}
+                        <span class="badge-status">🟢 Operativo</span>
+                    {% elif c130.condition == 1 %}
+                        <span class="badge-status" style="background: rgba(255, 193, 7, 0.2); color: #ffc107;">🟡 En Mantenimiento</span>
+                    {% elif c130.condition == 2 %}
+                        <span class="badge-status" style="background: rgba(220, 53, 69, 0.2); color: #dc3545;">🔴 Inoperativo</span>
+                    {% endif %}
+                </p>
+            </div>
+        </div>
+
+        <!-- Datos ocultos para JS -->
+        <div id="utility-life-data" data-value="{{ c130.utility_life|default:'0' }}"></div>
+        <input type="hidden" id="c130-id" value="{{ c130.id }}">
+        
+        <!-- Datos de subsistemas para JS -->
+        <div id="subsystems-data" 
+             data-estructural="{{ subsystems.estructural|default:88 }}"
+             data-propulsion="{{ subsystems.propulsion|default:94 }}"
+             data-control-vuelo="{{ subsystems.control_vuelo|default:91 }}"
+             data-avionica="{{ subsystems.avionica|default:85 }}"
+             data-aeronavegabilidad="{{ aeronavegabilidad|default:89.5 }}">
+        </div>
+
+        <div class="panels-grid">
+            <!-- Panel 1: Aeronavegabilidad -->
+            <div class="panel-aircraft">
+                <div class="panel-header">
+                    <i class="fas fa-chart-pie"></i>
+                    <h3>Aeronavegabilidad</h3>
+                </div>
+                <div class="panel-content">
+                    <div class="global-percent" id="globalPercent" style="cursor: pointer;">
+                        {{ aeronavegabilidad|default:89.5 }}%
+                        <i class="fas fa-edit" style="font-size: 14px; margin-left: 10px; color: #00ccff;"></i>
+                    </div>
+                    <div class="info-text">
+                        <i class="fas fa-info-circle"></i> Estado general de la aeronave - Click para editar
+                    </div>
+                    
+                    <div class="subsystems-container">
+                        <div class="subsystem-row" data-subsystem="estructural">
+                            <span class="subsystem-name"><i class="fas fa-hard-hat"></i> Estructural</span>
+                            <span class="subsystem-percent" id="estructural-percent">{{ subsystems.estructural|default:88 }}%</span>
+                            <i class="fas fa-pen edit-subsystem" style="color: #00ccff; cursor: pointer; margin-left: 10px;"></i>
+                        </div>
+                        <div class="subsystem-row" data-subsystem="propulsion">
+                            <span class="subsystem-name"><i class="fas fa-fan"></i> Propulsión</span>
+                            <span class="subsystem-percent" id="propulsion-percent">{{ subsystems.propulsion|default:94 }}%</span>
+                            <i class="fas fa-pen edit-subsystem" style="color: #00ccff; cursor: pointer; margin-left: 10px;"></i>
+                        </div>
+                        <div class="subsystem-row" data-subsystem="control_vuelo">
+                            <span class="subsystem-name"><i class="fas fa-tachometer-alt"></i> Control De Vuelo</span>
+                            <span class="subsystem-percent" id="control_vuelo-percent">{{ subsystems.control_vuelo|default:91 }}%</span>
+                            <i class="fas fa-pen edit-subsystem" style="color: #00ccff; cursor: pointer; margin-left: 10px;"></i>
+                        </div>
+                        <div class="subsystem-row" data-subsystem="avionica">
+                            <span class="subsystem-name"><i class="fas fa-microchip"></i> Aviónica</span>
+                            <span class="subsystem-percent" id="avionica-percent">{{ subsystems.avionica|default:85 }}%</span>
+                            <i class="fas fa-pen edit-subsystem" style="color: #00ccff; cursor: pointer; margin-left: 10px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 2: Gestión de Tareas -->
+            <div class="panel-aircraft">
+                <div class="panel-header">
+                    <i class="fas fa-clipboard-list"></i>
+                    <h3>Gestión de Tareas</h3>
+                </div>
+                <div class="panel-content">
+                    <div class="task-stats">
+                        <div class="stat-card">
+                            <div class="stat-number" id="stat-total">{{ total_tasks|default:0 }}</div>
+                            <div class="stat-label">Total</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" style="color:#0f0;" id="stat-completed">{{ completed_tasks|default:0 }}</div>
+                            <div class="stat-label">Completadas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" style="color:#00ccff;" id="stat-progress">{{ in_progress_tasks|default:0 }}</div>
+                            <div class="stat-label">En Progreso</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" style="color:#ffc107;" id="stat-pending">{{ pending_tasks|default:0 }}</div>
+                            <div class="stat-label">Pendientes</div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div style="display: flex; justify-content: space-between; font-size: 12px;">
+                            <span>Cumplimiento del Plan</span>
+                            <span id="global-completion-text">{{ global_completion|default:0 }}%</span>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div id="global-progress-fill" class="progress-bar-fill" style="width: {{ global_completion|default:0 }}%;"></div>
+                        </div>
+                    </div>
+
+                    <div id="tasks-list" class="tasks-list-centered">
+                        {% for task in tasks %}
+                        <div class="task-item" data-task-id="{{ task.id }}">
+                            <div class="task-header">
+                                <div class="task-name">
+                                    {{ task.name }}
+                                    <span class="task-type {{ task.task_type }}">{{ task.get_task_type_display }}</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span class="task-status {{ task.status }}">{{ task.get_status_display }}</span>
+                                    <button class="btn-delete-task" data-task-id="{{ task.id }}" data-task-name="{{ task.name }}" title="Eliminar">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="progress-small">
+                                <div class="progress-small-fill" style="width: {{ task.completion_percentage|default:0 }}%;"></div>
+                            </div>
+                            <div class="task-footer">
+                                <span><i class="fas fa-calendar"></i> {{ task.due_date|date:"d/m/Y" }}</span>
+                                <span><i class="fas fa-clock"></i> {{ task.estimated_hours }} hrs</span>
+                                <span>{{ task.completion_percentage|default:0 }}%</span>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="empty-tasks">
+                            <i class="fas fa-check-circle" style="font-size: 48px;"></i>
+                            <p>No hay tareas programadas</p>
+                            <p style="font-size: 12px;">Haz clic en "Agregar Tarea" para crear una nueva</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <button class="btn-add" id="btn-add-task">
+                        <i class="fas fa-plus"></i> Agregar Tarea
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel 3: Estado Operativo -->
+            <div class="panel-aircraft">
+                <div class="panel-header">
+                    <i class="fas fa-chart-pie"></i>
+                    <h3>Estado Operativo</h3>
+                </div>
+                <div class="panel-content" style="padding: 10px; max-height: none; overflow-y: visible;">
+                    <div class="donuts-container">
+                        <div class="donut-item">
+                            <div class="donut-title">
+                                <i class="fas fa-hourglass-half"></i> Vida Útil
+                            </div>
+                            <div class="donut-chart">
+                                <canvas id="donutUseful" width="100" height="100"></canvas>
+                                <div class="donut-label">
+                                    <div class="percentage" id="usefulPercentLabel">0%</div>
+                                    <div class="label">Usado</div>
+                                </div>
+                            </div>
+                            <div class="donut-stats">
+                                <span>📊 <span id="usedHoursDonut">0</span>h</span>
+                                <span>📈 <span id="remainingDonut">0</span>h</span>
+                            </div>
+                        </div>
+
+                        <div class="donut-item">
+                            <div class="donut-title">
+                                <i class="fas fa-engine"></i> Salud Motor
+                            </div>
+                            <div class="donut-chart">
+                                <canvas id="donutEngine" width="100" height="100"></canvas>
+                                <div class="donut-label">
+                                    <div class="percentage" id="enginePercentLabel">0%</div>
+                                    <div class="label">Rendim.</div>
+                                </div>
+                            </div>
+                            <div class="donut-stats">
+                                <span>⚙️ <span id="engineHealthDonut">0</span>%</span>
+                                <span>⏰ <span id="nextServiceDonut">0</span>h</span>
+                            </div>
+                        </div>
+
+                        <div class="donut-item">
+                            <div class="donut-title">
+                                <i class="fas fa-chart-line"></i> Eficiencia
+                            </div>
+                            <div class="donut-chart">
+                                <canvas id="donutEfficiency" width="100" height="100"></canvas>
+                                <div class="donut-label">
+                                    <div class="percentage" id="efficiencyPercentLabel">0%</div>
+                                    <div class="label">Global</div>
+                                </div>
+                            </div>
+                            <div class="donut-stats">
+                                <span>✅ <span id="availabilityDonut">0</span>%</span>
+                                <span>⭐ <span id="reliabilityDonut">0</span>%</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="legend">
+                        <div class="legend-item"><div class="legend-color optimal"></div><span>Óptimo</span></div>
+                        <div class="legend-item"><div class="legend-color warning"></div><span>Advertencia</span></div>
+                        <div class="legend-item"><div class="legend-color critical"></div><span>Crítico</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 4: Calendario -->
+            <div class="panel-aircraft">
+                <div class="panel-header">
+                    <i class="fas fa-calendar-alt"></i>
+                    <h3>Calendario Mantenimiento</h3>
+                </div>
+                <div class="panel-content">
+                    <div class="calendar-container">
+                        <div class="calendar-header">
+                            <span class="calendar-nav" id="prevMonth"><i class="fas fa-chevron-left"></i></span>
+                            <span id="monthYear"></span>
+                            <span class="calendar-nav" id="nextMonth"><i class="fas fa-chevron-right"></i></span>
+                        </div>
+                        <div class="calendar-weekdays">
+                            <span>Dom</span><span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span>
+                        </div>
+                        <div class="calendar-days" id="calendarDays"></div>
+                        <button class="btn-add-event" id="addEventBtn">
+                            <i class="fas fa-plus"></i> Agregar evento mantenimiento
+                        </button>
+                    </div>
+                    <div class="info-text">
+                        <span style="color:#ffc107;">🔧 Mantenimiento</span>
+                        <span style="color:#0f0; margin-left: 8px;">🔍 Inspección</span>
+                        <span style="color:#dc3545; margin-left: 8px;">⚠️ Overhaul</span>
+                        <span style="color:#aaa; margin-left: 8px;">👆 Click para eliminar</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% csrf_token %}
+
+<script>
+    // Datos iniciales para el JS
+    window.C130_ID = parseInt('{{ c130.id }}');
+    window.SUBSYSTEMS_DATA = {
+        estructural: parseInt('{{ subsystems.estructural|default:88 }}'),
+        propulsion: parseInt('{{ subsystems.propulsion|default:94 }}'),
+        control_vuelo: parseInt('{{ subsystems.control_vuelo|default:91 }}'),
+        avionica: parseInt('{{ subsystems.avionica|default:85 }}'),
+        aeronavegabilidad: parseFloat('{{ aeronavegabilidad|default:89.5 }}')
+    };
+</script>
+{% endblock %}

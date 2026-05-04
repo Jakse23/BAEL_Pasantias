@@ -1,0 +1,114 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block content %}
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">Detalle de Aeronave</h3>
+            </div>
+            <div class="col-sm-6 header-actions">
+                <a href="{% url 'home:c130_list' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver a la lista
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <div class="card">
+            <div class="card-header">
+                <h4><i class="fas fa-plane"></i> {{ c130.system }} - {{ c130.acronym }}</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-group">
+                            <label class="info-label">Serial / Matrícula:</label>
+                            <p class="info-value">{{ c130.acronym }}</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-group">
+                            <label class="info-label">Condición:</label>
+                            <p class="info-value">
+                                {% if c130.condition == 0 %}
+                                    <span class="badge bg-success">Operativo</span>
+                                {% elif c130.condition == 1 %}
+                                    <span class="badge bg-warning">En Mantenimiento</span>
+                                {% elif c130.condition == 2 %}
+                                    <span class="badge bg-danger">Inoperativo</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="info-group">
+                            <label class="info-label">Horas Acumuladas:</label>
+                            <p class="info-value">{{ c130.utility_life|default:"0" }} hrs</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="info-group">
+                            <label class="info-label">Horas Totales:</label>
+                            <p class="info-value">12,000 hrs</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="info-group">
+                            <label class="info-label">Horas Restantes:</label>
+                            <p class="info-value">
+                                {% with acumulado=c130.utility_life|default:0 %}
+                                    {% if acumulado < 12000 %}
+                                        <span class="badge bg-info">{{ 12000|add:acumulado }} hrs</span>
+                                    {% elif acumulado == 12000 %}
+                                        <span class="badge bg-warning">Límite Alcanzado</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Excedido por {{ acumulado|add:12000 }} hrs</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .info-group {
+        margin-bottom: 20px;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 8px;
+    }
+    
+    .info-label {
+        display: block;
+        font-size: 0.7rem;
+        color: #8A9BB0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 5px;
+    }
+    
+    .info-value {
+        font-size: 1.1rem;
+        font-weight: 500;
+        color: #ffffff;
+        margin: 0;
+    }
+</style>
+{% endblock %}
