@@ -1,0 +1,353 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block content %}
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">
+                    <i class="fas fa-plane"></i> Detalle Técnico de Aeronave
+                    <small style="color: #7ab8ff;">{{ aeronave.acronym }}</small>
+                </h3>
+                <p class="text-muted" style="font-size: 0.7rem;">Vista con edición para técnicos de mantenimiento - Flota: {{ aeronave.system }}</p>
+            </div>
+            <div class="col-sm-6 header-actions">
+                <a href="{% url 'home:apartado_tecnico' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Apartado Técnico
+                </a>
+                <a href="{% url 'home:c130_update' aeronave.id %}?flota={{ aeronave.system }}" class="btn btn-primary">
+                    <i class="fas fa-edit"></i> Editar Aeronave
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <!-- Grid de 2 columnas -->
+        <div class="panels-grid">
+            <!-- Panel izquierdo: Datos Generales y Subsistemas -->
+            <div class="panel-aircraft">
+                <div class="panel-header">
+                    <i class="fas fa-chart-line"></i>
+                    <h3>AERONAVEGABILIDAD</h3>
+                </div>
+                <div class="panel-content">
+                    <div class="aircraft-title-detalle">
+                        <h2>{{ aeronave.acronym }}</h2>
+                        {% if aeronave.condition == 0 %}
+                            <span class="badge-status">✅ OPERATIVO</span>
+                        {% elif aeronave.condition == 1 %}
+                            <span class="badge-status" style="background: rgba(255,171,58,0.2); color: #ffc46b;">⚠️ MANTENIMIENTO</span>
+                        {% else %}
+                            <span class="badge-status" style="background: rgba(255,107,107,0.2); color: #ff8a8a;">❌ INOPERATIVO</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="stats-grid" style="grid-template-columns: repeat(2, 1fr); margin-bottom: 20px;">
+                        <div class="stat-card">
+                            <i class="fas fa-hourglass-half"></i>
+                            <div class="value">{{ horas_vuelo|floatformat:0 }} hrs</div>
+                            <div class="label">Horas de Vuelo</div>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-charging-station"></i>
+                            <div class="value">{{ horas_restantes|floatformat:0 }} hrs</div>
+                            <div class="label">Horas Restantes</div>
+                        </div>
+                    </div>
+                    
+                    <div class="global-percent" style="text-align: center; font-size: 42px; margin: 20px 0;">
+                        {{ aeronavegabilidad|floatformat:1 }}%
+                    </div>
+                    
+                    <div class="subsystems-container">
+                        <h4 style="color: #7ab8ff; margin-bottom: 15px;">
+                            <i class="fas fa-microchip"></i> Subsistemas
+                            <button class="btn-edit-subsistema" style="float: right; background: none; border: none; color: #7ab8ff; cursor: pointer;" onclick="editarSubsistemas()">
+                                <i class="fas fa-edit"></i> Editar
+                            </button>
+                        </h4>
+                        <div id="subsistemasLista">
+                            {% for name, value in subsystems.items %}
+                            <div class="subsystem-row" data-subsistema="{{ name }}">
+                                <div class="subsystem-name">{{ name|upper }}</div>
+                                <div class="subsystem-percent">
+                                    <div class="progress-bar-bg" style="width: 100px; display: inline-block; margin-right: 10px;">
+                                        <div class="progress-fill" style="width: {{ value }}%;"></div>
+                                    </div>
+                                    <span class="subsystem-value">{{ value }}%</span>
+                                    <button class="btn-edit-subsistema-item" style="background: none; border: none; color: #7ab8ff; margin-left: 10px; cursor: pointer;" onclick="editarSubsistemaItem('{{ name }}', {{ value }})">
+                                        <i class="fas fa-pen"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Panel derecho: Tareas y Eventos -->
+            <div class="panel-aircraft">
+                <div class="panel-header">
+                    <i class="fas fa-tasks"></i>
+                    <h3>TAREAS Y MANTENIMIENTO</h3>
+                </div>
+                <div class="panel-content">
+                    <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom: 20px;">
+                        <div class="stat-card">
+                            <div class="value" style="color: #6fdf8a;">{{ completed_tasks }}</div>
+                            <div class="label">Completadas</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" style="color: #ffc46b;">{{ in_progress_tasks }}</div>
+                            <div class="label">En Progreso</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="value" style="color: #ff8a8a;">{{ pending_tasks }}</div>
+                            <div class="label">Pendientes</div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 15px; text-align: right;">
+                        <button class="btn-add" onclick="agregarTarea()">
+                            <i class="fas fa-plus"></i> Agregar Tarea
+                        </button>
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Tarea</th>
+                                    <th>Estado</th>
+                                    <th>Progreso</th>
+                                    <th>Fecha Límite</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tareasLista">
+                                {% for task in tasks %}
+                                <tr data-task-id="{{ task.id }}">
+                                    <td>{{ task.name }}</td>
+                                    <td>
+                                        {% if task.status == 'completed' %}
+                                            <span class="badge-ok">✅ Completada</span>
+                                        {% elif task.status == 'in_progress' %}
+                                            <span class="badge-pendiente">🔄 En Progreso</span>
+                                        {% else %}
+                                            <span class="badge-urgente">⏳ Pendiente</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="progress-bar-bg" style="width: 80px;">
+                                            <div class="progress-fill" style="width: {{ task.completion_percentage }}%;"></div>
+                                        </div>
+                                        {{ task.completion_percentage }}%
+                                    </td>
+                                    <td>{{ task.due_date|date:"d/m/Y"|default:"-" }}</td>
+                                    <td>
+                                        <button class="btn-icon btn-edit-task" onclick="editarTarea({{ task.id }})" title="Editar">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn-icon btn-delete-task" onclick="eliminarTarea({{ task.id }})" title="Eliminar">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No hay tareas registradas</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para editar subsistemas -->
+<div id="modalSubsistema" style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: #1a2635; border: 2px solid #7ab8ff; border-radius: 20px; padding: 25px; z-index: 1000; min-width: 300px;">
+    <h4 style="color: #7ab8ff; margin-bottom: 20px;">Editar Subsistema</h4>
+    <input type="hidden" id="subsistemaNombre">
+    <label>Porcentaje de operatividad:</label>
+    <input type="number" id="subsistemaPorcentaje" min="0" max="100" class="form-control-modern" style="margin: 10px 0;">
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+        <button onclick="guardarSubsistema()" class="btn-modern btn-save">Guardar</button>
+        <button onclick="cerrarModal()" class="btn-modern btn-cancel">Cancelar</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function editarSubsistemas() {
+        Swal.fire({
+            title: 'Editar todos los subsistemas',
+            text: 'Ingrese el nuevo porcentaje de aeronavegabilidad general',
+            input: 'number',
+            inputValue: {{ aeronavegabilidad|floatformat:0 }},
+            inputAttributes: {
+                min: 0,
+                max: 100,
+                step: 1
+            },
+            showCancelButton: true,
+            confirmButtonText: 'Actualizar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                const nuevoPorcentaje = result.value;
+                if (nuevoPorcentaje >= 0 && nuevoPorcentaje <= 100) {
+                    guardarTodosSubsistemas(nuevoPorcentaje);
+                } else {
+                    Swal.fire('Error', 'El porcentaje debe estar entre 0 y 100', 'error');
+                }
+            }
+        });
+    }
+    
+    function editarSubsistemaItem(nombre, valorActual) {
+        document.getElementById('subsistemaNombre').value = nombre;
+        document.getElementById('subsistemaPorcentaje').value = valorActual;
+        document.getElementById('modalSubsistema').style.display = 'block';
+    }
+    
+    function cerrarModal() {
+        document.getElementById('modalSubsistema').style.display = 'none';
+    }
+    
+    function guardarSubsistema() {
+        const nombre = document.getElementById('subsistemaNombre').value;
+        const porcentaje = document.getElementById('subsistemaPorcentaje').value;
+        
+        fetch(`/home/api/c130/{{ aeronave.id }}/subsystem/update/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                subsystem: nombre,
+                percentage: parseInt(porcentaje)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                Swal.fire('Error', data.error, 'error');
+            }
+        });
+        
+        cerrarModal();
+    }
+    
+    function guardarTodosSubsistemas(porcentaje) {
+        fetch(`/home/api/c130/{{ aeronave.id }}/subsystems/update-all/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            },
+            body: JSON.stringify({
+                aeronavegabilidad: parseInt(porcentaje)
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                Swal.fire('Error', data.error, 'error');
+            }
+        });
+    }
+    
+    function agregarTarea() {
+        Swal.fire({
+            title: 'Nueva Tarea',
+            html: `
+                <input id="taskName" class="swal2-input" placeholder="Nombre de la tarea">
+                <input id="taskDate" type="date" class="swal2-input">
+                <input id="taskHours" type="number" class="swal2-input" placeholder="Horas estimadas">
+                <select id="taskType" class="swal2-select">
+                    <option value="maintenance">Mantenimiento</option>
+                    <option value="inspection">Inspección</option>
+                    <option value="repair">Reparación</option>
+                </select>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Crear',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                return {
+                    name: document.getElementById('taskName').value,
+                    due_date: document.getElementById('taskDate').value,
+                    estimated_hours: document.getElementById('taskHours').value,
+                    task_type: document.getElementById('taskType').value
+                }
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/home/api/c130/{{ aeronave.id }}/tasks/create/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify(result.value)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                });
+            }
+        });
+    }
+    
+    function editarTarea(taskId) {
+        window.location.href = `/home/c130/task/${taskId}/edit/`;
+    }
+    
+    function eliminarTarea(taskId) {
+        Swal.fire({
+            title: '¿Eliminar tarea?',
+            text: 'Esta acción no se puede deshacer',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Sí, eliminar',
+            cancelButtonText: 'Cancelar'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`/home/api/task/${taskId}/delete/`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        Swal.fire('Error', data.error, 'error');
+                    }
+                });
+            }
+        });
+    }
+</script>
+{% endblock %}

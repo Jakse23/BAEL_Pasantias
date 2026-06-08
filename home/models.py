@@ -86,3 +86,7 @@ class Subsystem(models.Model):
     
     def __str__(self):
         return f"{self.aircraft.acronym} - {self.get_name_display()} ({self.percentage}%)"
+    
+
+
+    

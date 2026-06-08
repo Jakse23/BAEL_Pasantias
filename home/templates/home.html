@@ -7,24 +7,29 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{% static 'assets/css/home.css' %}">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="icon" type="image/x-icon" href="{% static 'assets/img/hangaricon.png' %}">
-      <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <head>
+    <link rel="icon" type="image/x-icon" href="{% static 'assets/img/hangaricon.png' %}">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-</head>
 </head>
 <body>
     <div class="main-container">
         <!-- Sidebar con estructura funcional -->
         <nav class="sidebar">
             <div class="nav-menu">
-               <div class="nav-item">
-    <div class="nav-link" id="btnInicio" style="cursor: pointer;">
-        <img src="{% static 'assets/img/hangar.png' %}" class="logo" alt="DIMADEA">
-        <span class="nav-label">Inicio</span>
-    </div>
-</div>
+                <!-- INICIO -->
+                <div class="nav-item">
+                    <a href="/home/dashboard/" class="nav-link" id="btnInicio">
+                        <img src="{% static 'assets/img/hangar.png' %}" class="logo" alt="DIMADEA">
+                        <span class="nav-label">Inicio</span>
+                    </a>
+                </div>
+
+                <!-- ====== APARTADO TÉCNICO (ENLACE DIRECTO) ====== -->
+                <div class="nav-item">
+                    <a href="{% url 'home:apartado_tecnico' %}" class="nav-link">
+                        <i class="fas fa-tools"></i>
+                        <span class="nav-label">📋 Apartado Técnico</span>
+                    </a>
+                </div>
 
                 <!-- Flotas con submenú -->
                 <div class="nav-item has-submenu">
@@ -34,6 +39,7 @@
                         <i class="fas fa-chevron-down arrow-icon"></i>
                     </div>
                     <div class="submenu">
+                        <!-- Aeronaves -->
                         <div class="subnav-link" data-fleet="c130">
                             <i class="fas fa-plane"></i>
                             <span>C-130 Hércules</span>
@@ -119,23 +125,22 @@
                 </div>
             </div>
 
-          <!-- Botón de cierre de sesión en la parte inferior -->
-<!-- Botón de cierre de sesión en la parte inferior -->
-<div class="nav-footer">
-    <form action="/logout/" method="post" id="logoutForm" style="margin: 0; width: 100%;">
-        {% csrf_token %}
-        <button type="submit" class="nav-link" id="logoutBtn" style="background: none; border: none; width: 100%; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 12px; padding: 12px 16px;">
-            <i class="fas fa-sign-out-alt"></i>
-            <span class="nav-label">Cerrar Sesión</span>
-        </button>
-    </form>
-</div>
+            <!-- Botón de cierre de sesión -->
+            <div class="nav-footer">
+                <form action="/logout/" method="post" id="logoutForm">
+                    {% csrf_token %}
+                    <button type="submit" class="nav-link" id="logoutBtn">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="nav-label">Cerrar Sesión</span>
+                    </button>
+                </form>
+            </div>
         </nav>
 
         <div class="content">
             <header class="header">
                 <div class="title-group">
-              <img src="{% static 'assets/img/dimadea.png' %}" class="logo" alt="DIMADEA">
+                    <img src="{% static 'assets/img/dimadea.png' %}" class="logo" alt="DIMADEA">
                     <h1>SISTEMA DE DIMADEA - <span class="sub">GESTIÓN DE FLOTAS</span></h1>
                 </div>
                 <div class="search-box">
@@ -143,13 +148,32 @@
                     <i class="fas fa-search"></i>
                 </div>
             </header>
-<main id="mainContent">
+            <main id="mainContent">
                 {% block content %}
                 {% endblock %}
                 
                 <div id="dynamicContent">
-                    </div>
-            </main> </div> </div> <script src="{% static 'assets/js/home.js' %}"></script>
+                </div>
+            </main>
+        </div>
+    </div>
+    <script src="{% static 'assets/js/home.js' %}"></script>
+    
+    <script>
+        // Función para desplegar/ocultar submenús
+        document.querySelectorAll('.dropdown-trigger').forEach(function(trigger) {
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var parent = this.closest('.has-submenu');
+                var submenu = parent.querySelector('.submenu');
+                submenu.classList.toggle('open');
+                var arrow = this.querySelector('.arrow-icon');
+                if (arrow) {
+                    arrow.style.transform = submenu.classList.contains('open') ? 'rotate(180deg)' : '';
+                }
+            });
+        });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>

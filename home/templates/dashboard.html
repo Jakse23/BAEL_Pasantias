@@ -1,6 +1,7 @@
 {% extends 'home.html' %}
 {% load static %}
 
+
 {% block content %}
 <div class="app-content-header">
     <div class="container-fluid">
@@ -27,8 +28,7 @@
                 <div class="dashboard-card card-efx" data-fleet-category="combate" style="cursor: pointer;">
                     <i class="fas fa-fighter-jet card-icon" style="font-size: 48px; color: #ff5252;"></i>
                     <h2 style="margin-top: 16px; color: #ffffff;">Combate</h2>
-                    <p style="color: #7a8fa3; text-align: center;">Cazas-Superioridad Aérea/Operaciones Especiales
-                        .</p>
+                    <p style="color: #7a8fa3; text-align: center;">Cazas-Superioridad Aérea/Operaciones Especiales</p>
                 </div>
 
                 <div class="dashboard-card card-efx" data-fleet-category="ala-rotativa" style="cursor: pointer;">
@@ -40,9 +40,8 @@
         </div>
     </div>
 </div>
-{% endblock content %}
+{% endblock %}
 
 {% block extra_js %}
 <script src="{% static 'assets/js/dashboard/redirect-dashboard.js' %}"></script>
-{% endblock extra_js %}
-
+{% endblock %}

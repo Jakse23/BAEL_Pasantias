@@ -1,0 +1,625 @@
+{% extends 'home.html' %}
+{% load static %}
+
+{% block extra_css %}
+<style>
+    /* ========== ESTILOS PARA DETALLE COMPLETO ========== */
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .stat-card {
+        background: linear-gradient(135deg, #0a0f18 0%, #0f1726 100%);
+        border-radius: 20px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid rgba(30, 136, 229, 0.3);
+        transition: all 0.3s ease;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-3px);
+        border-color: #64B5F6;
+    }
+    
+    .stat-card i {
+        font-size: 2rem;
+        margin-bottom: 10px;
+    }
+    
+    .stat-card .value {
+        font-size: 2rem;
+        font-weight: bold;
+        font-family: 'Orbitron', monospace;
+        color: #64B5F6;
+    }
+    
+    .stat-card .label {
+        font-size: 0.7rem;
+        color: #8A9BB0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    /* Tablas */
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table th {
+        background: rgba(13, 71, 161, 0.25);
+        padding: 12px;
+        text-align: left;
+        color: #64B5F6;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border-bottom: 1px solid rgba(30, 136, 229, 0.3);
+    }
+    
+    .data-table td {
+        padding: 12px;
+        border-bottom: 1px solid rgba(30, 136, 229, 0.15);
+        color: #e0e6ed;
+        font-size: 0.8rem;
+    }
+    
+    .data-table tr:hover td {
+        background: rgba(30, 136, 229, 0.05);
+    }
+    
+    /* Badges de estado */
+    .badge-verde {
+        background: rgba(0, 230, 118, 0.15);
+        color: #00e676;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .badge-amarillo {
+        background: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .badge-rojo {
+        background: rgba(255, 82, 82, 0.15);
+        color: #ff5252;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+    
+    .badge-ok {
+        background: rgba(0, 230, 118, 0.15);
+        color: #00e676;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+    }
+    
+    .badge-pendiente {
+        background: rgba(255, 193, 7, 0.15);
+        color: #ffc107;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+    }
+    
+    .badge-urgente {
+        background: rgba(255, 82, 82, 0.15);
+        color: #ff5252;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.6; }
+    }
+    
+    /* Secciones */
+    .section-card {
+        background: rgba(8, 14, 22, 0.6);
+        border-radius: 20px;
+        border: 1px solid rgba(30, 136, 229, 0.25);
+        margin-bottom: 25px;
+        overflow: hidden;
+    }
+    
+    .section-header {
+        background: rgba(13, 71, 161, 0.2);
+        padding: 15px 20px;
+        border-bottom: 1px solid rgba(30, 136, 229, 0.3);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .section-header h3 {
+        margin: 0;
+        color: #64B5F6;
+        font-size: 1rem;
+        font-family: 'Orbitron', monospace;
+    }
+    
+    .section-header i {
+        margin-right: 8px;
+    }
+    
+    .section-body {
+        padding: 20px;
+    }
+    
+    .btn-add {
+        background: rgba(30, 136, 229, 0.15);
+        border: 1px solid #64B5F6;
+        color: #64B5F6;
+        padding: 5px 12px;
+        border-radius: 8px;
+        font-size: 0.7rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+    }
+    
+    .btn-add:hover {
+        background: rgba(30, 136, 229, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    /* Materiales requeridos */
+    .cantidad-solicitar {
+        font-weight: bold;
+    }
+    
+    .cantidad-solicitar.positivo {
+        color: #ff5252;
+    }
+    
+    .cantidad-solicitar.cero {
+        color: #00e676;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1000px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 8px;
+            font-size: 0.7rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="app-content-header">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-6">
+                <h3 class="mb-0">✈️ Detalle Completo: {{ aeronave.acronym }}</h3>
+                <p class="text-muted" style="font-size: 0.7rem; margin-top: 5px;">Lista Maestra, Componentes y Estadísticas</p>
+            </div>
+            <div class="col-sm-6 header-actions">
+                <a href="{% url 'home:c130_dashboard_general' %}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="app-content">
+    <div class="container-fluid">
+        <!-- ========== TARJETAS DE ESTADÍSTICAS ========== -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <i class="fas fa-microchip" style="color: #64B5F6;"></i>
+                <div class="value">24</div>
+                <div class="label">Componentes Registrados</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-hourglass-half" style="color: #00e676;"></i>
+                <div class="value">3,450</div>
+                <div class="label">Horas de Vuelo</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-chart-line" style="color: #ffc107;"></i>
+                <div class="value">8,550</div>
+                <div class="label">Horas Restantes</div>
+            </div>
+            <div class="stat-card">
+                <i class="fas fa-check-circle" style="color: #00e676;"></i>
+                <div class="value">94%</div>
+                <div class="label">Cumplimiento</div>
+            </div>
+        </div>
+
+        <!-- ========== LISTA MAESTRA DE COMPONENTES ========== -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3><i class="fas fa-list"></i> Lista Maestra de Componentes</h3>
+                <a href="#" class="btn-add">
+                    <i class="fas fa-plus"></i> Agregar Componente
+                </a>
+            </div>
+            <div class="section-body">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>CÓDIGO</th>
+                                <th>NOMBRE</th>
+                                <th>N° PARTE</th>
+                                <th>HORAS ACUM.</th>
+                                <th>VIDA ÚTIL</th>
+                                <th>ESTADO</th>
+                                <th>ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>M-001</strong></td>
+                                <td>Motor T56-A-15 (Posición #1)</td>
+                                <td>12345-T56</td>
+                                <td>3,450 hrs</td>
+                                <td>5,000 hrs</td>
+                                <td><span class="badge-verde">🟢 Bueno</span></td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-edit" style="color: #ffc107;"><i class="fas fa-edit"></i></a>
+                                    <a href="#" class="btn-icon btn-view" style="color: #64B5F6;"><i class="fas fa-eye"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>M-002</strong></td>
+                                <td>Motor T56-A-15 (Posición #2)</td>
+                                <td>12345-T56</td>
+                                <td>3,450 hrs</td>
+                                <td>5,000 hrs</td>
+                                <td><span class="badge-verde">🟢 Bueno</span></td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-edit"><i class="fas fa-edit"></i></a>
+                                    <a href="#" class="btn-icon btn-view"><i class="fas fa-eye"></i></a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td><strong>M-003</strong></td>
+                                <td>Motor T56-A-15 (Posición #3)</td>
+                                <td>12345-T56</td>
+                                <td>3,450 hrs</td>
+                                <td>5,000 hrs</td>
+                                <td><span class="badge-verde">🟢 Bueno</span></td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-edit"><i class="fas fa-edit"></i></a>
+                                    <a href="#" class="btn-icon btn-view"><i class="fas fa-eye"></i></a>
+                                </td>
+                             </tr>
+                            <tr>
+                                <td><strong>M-004</strong></td>
+                                <td>Motor T56-A-15 (Posición #4)</td>
+                                <td>12345-T56</td>
+                                <td>3,450 hrs</td>
+                                <td>5,000 hrs</td>
+                                <td><span class="badge-verde">🟢 Bueno</span></td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-edit"><i class="fas fa-edit"></i></a>
+                                    <a href="#" class="btn-icon btn-view"><i class="fas fa-eye"></i></a>
+                                </td>
+                             </tr>
+                            <tr>
+                                <td><strong>H-001</strong></td>
+                                <td>Hélice NP2000</td>
+                                <td>NP2000-01</td>
+                                <td>3,450 hrs</td>
+                                <td>4,000 hrs</td>
+                                <td><span class="badge-amarillo">🟡 Revisar</span></td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-edit"><i class="fas fa-edit"></i></a>
+                                    <a href="#" class="btn-icon btn-view"><i class="fas fa-eye"></i></a>
+                                </td>
+                             </tr>
+                            <tr>
+                                <td><strong>H-002</strong></td>
+                                <td>Sistema Hidráulico</td>
+                                <td>HYD-789</td>
+                                <td>3,450 hrs</td>
+                                <td>3,500 hrs</td>
+                                <td><span class="badge-rojo">🔴 Crítico</span></td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-edit"><i class="fas fa-edit"></i></a>
+                                    <a href="#" class="btn-icon btn-view"><i class="fas fa-eye"></i></a>
+                                </td>
+                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== PROGRAMAS DE MANTENIMIENTO ========== -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3><i class="fas fa-calendar-alt"></i> Programas de Mantenimiento</h3>
+                <a href="#" class="btn-add">
+                    <i class="fas fa-plus"></i> Agregar Programa
+                </a>
+            </div>
+            <div class="section-body">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>PROGRAMA</th>
+                                <th>INTERVALO</th>
+                                <th>ÚLTIMA REALIZACIÓN</th>
+                                <th>PRÓXIMA REALIZACIÓN</th>
+                                <th>ESTADO</th>
+                                <th>ACCIONES</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Inspección 50 Horas</strong></td>
+                                <td>50 horas</td>
+                                <td>15/04/2026</td>
+                                <td>20/05/2026</td>
+                                <td><span class="badge-pendiente">⏳ Pendiente</span></td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-edit"><i class="fas fa-edit"></i></a>
+                                    <a href="#" class="btn-icon btn-view"><i class="fas fa-eye"></i></a>
+                                </td>
+                             </tr>
+                            <tr>
+                                <td><strong>Inspección 100 Horas</strong></td>
+                                <td>100 horas</td>
+                                <td>10/03/2026</td>
+                                <td>15/06/2026</td>
+                                <td><span class="badge-ok">✅ OK</span></td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-edit"><i class="fas fa-edit"></i></a>
+                                    <a href="#" class="btn-icon btn-view"><i class="fas fa-eye"></i></a>
+                                </td>
+                             </tr>
+                            <tr>
+                                <td><strong>Inspección 300 Horas</strong></td>
+                                <td>300 horas</td>
+                                <td>05/01/2026</td>
+                                <td>10/08/2026</td>
+                                <td><span class="badge-ok">✅ OK</span></td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-edit"><i class="fas fa-edit"></i></a>
+                                    <a href="#" class="btn-icon btn-view"><i class="fas fa-eye"></i></a>
+                                </td>
+                             </tr>
+                            <tr>
+                                <td><strong>Inspección 600 Horas</strong></td>
+                                <td>600 horas</td>
+                                <td>20/11/2025</td>
+                                <td>25/11/2026</td>
+                                <td><span class="badge-ok">✅ OK</span></td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-edit"><i class="fas fa-edit"></i></a>
+                                    <a href="#" class="btn-icon btn-view"><i class="fas fa-eye"></i></a>
+                                </td>
+                             </tr>
+                            <tr>
+                                <td><strong>Inspección Anual</strong></td>
+                                <td>12 meses</td>
+                                <td>01/12/2025</td>
+                                <td>01/12/2026</td>
+                                <td><span class="badge-ok">✅ OK</span></td>
+                                <td>
+                                    <a href="#" class="btn-icon btn-edit"><i class="fas fa-edit"></i></a>
+                                    <a href="#" class="btn-icon btn-view"><i class="fas fa-eye"></i></a>
+                                </td>
+                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== MATERIALES REQUERIDOS (PRÓXIMA INSPECCIÓN) ========== -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3><i class="fas fa-boxes"></i> Materiales Requeridos - Próxima Inspección (50 Horas)</h3>
+                <a href="#" class="btn-add">
+                    <i class="fas fa-file-alt"></i> Generar Requerimiento
+                </a>
+            </div>
+            <div class="section-body">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>CÓDIGO</th>
+                                <th>MATERIAL</th>
+                                <th>CANTIDAD REQUERIDA</th>
+                                <th>STOCK ACTUAL</th>
+                                <th>CANTIDAD A SOLICITAR</th>
+                                <th>ESTADO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>FIL-001</td>
+                                <td>Filtro de Aceite</td>
+                                <td>2</td>
+                                <td>5</td>
+                                <td class="cantidad-solicitar cero">0</td>
+                                <td><span class="badge-ok">✅ Suficiente</span></td>
+                             </tr>
+                            <tr>
+                                <td>EMP-002</td>
+                                <td>Empaque de Cámara</td>
+                                <td>4</td>
+                                <td>2</td>
+                                <td class="cantidad-solicitar positivo">2</td>
+                                <td><span class="badge-pendiente">⚠️ Pedir</span></td>
+                             </tr>
+                            <tr>
+                                <td>GRA-003</td>
+                                <td>Grasa Especial MIL-G-81322</td>
+                                <td>500 g</td>
+                                <td>200 g</td>
+                                <td class="cantidad-solicitar positivo">300 g</td>
+                                <td><span class="badge-urgente">🔴 Urgente</span></td>
+                             </tr>
+                            <tr>
+                                <td>LUB-004</td>
+                                <td>Aceite Hidráulico</td>
+                                <td>10 L</td>
+                                <td>8 L</td>
+                                <td class="cantidad-solicitar positivo">2 L</td>
+                                <td><span class="badge-pendiente">⚠️ Pedir</span></td>
+                             </tr>
+                            <tr>
+                                <td>HER-005</td>
+                                <td>Kit de Herramientas Especiales</td>
+                                <td>1</td>
+                                <td>1</td>
+                                <td class="cantidad-solicitar cero">0</td>
+                                <td><span class="badge-ok">✅ Suficiente</span></td>
+                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== ÚLTIMAS INSPECCIONES REALIZADAS ========== -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3><i class="fas fa-clipboard-list"></i> Últimas Inspecciones Realizadas</h3>
+                <a href="#" class="btn-add">
+                    <i class="fas fa-plus"></i> Registrar Inspección
+                </a>
+            </div>
+            <div class="section-body">
+                <div class="table-responsive">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>FECHA</th>
+                                <th>PROGRAMA</th>
+                                <th>HORAS ACUMULADAS</th>
+                                <th>HORAS PRODUCTIVAS</th>
+                                <th>CUMPLIMIENTO</th>
+                                <th>TÉCNICO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>15/04/2026</td>
+                                <td>Inspección 50 Horas</td>
+                                <td>3,450 hrs</td>
+                                <td>8 hrs</td>
+                                <td><span class="badge-ok">100%</span></td>
+                                <td>Ing. Pérez</td>
+                             </tr>
+                            <tr>
+                                <td>10/03/2026</td>
+                                <td>Inspección 100 Horas</td>
+                                <td>3,350 hrs</td>
+                                <td>12 hrs</td>
+                                <td><span class="badge-ok">100%</span></td>
+                                <td>Tec. Rodríguez</td>
+                             </tr>
+                            <tr>
+                                <td>05/01/2026</td>
+                                <td>Inspección 300 Horas</td>
+                                <td>3,150 hrs</td>
+                                <td>24 hrs</td>
+                                <td><span class="badge-ok">95%</span></td>
+                                <td>Ing. Pérez</td>
+                             </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== GRÁFICA DE CUMPLIMIENTO ========== -->
+        <div class="section-card">
+            <div class="section-header">
+                <h3><i class="fas fa-chart-line"></i> Cumplimiento de Inspecciones (Anual)</h3>
+            </div>
+            <div class="section-body">
+                <canvas id="graficaCumplimiento" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const ctx = document.getElementById('graficaCumplimiento');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                    datasets: [{
+                        label: 'Cumplimiento (%)',
+                        data: [92, 94, 96, 95, 97, 94, 93, 95, 96, 94, 95, 94],
+                        borderColor: '#42A5F5',
+                        backgroundColor: 'rgba(66, 165, 245, 0.08)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#1E88E5',
+                        pointBorderColor: '#ffffff',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        tension: 0.3,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { labels: { color: '#9ca3af', font: { size: 10 } } },
+                        tooltip: { backgroundColor: '#111827', titleColor: '#fff', bodyColor: '#9ca3af' }
+                    },
+                    scales: {
+                        y: { 
+                            min: 80, 
+                            max: 100, 
+                            ticks: { color: '#9ca3af' }, 
+                            grid: { color: '#1f2a40' },
+                            title: { display: true, text: 'Porcentaje (%)', color: '#9ca3af' }
+                        },
+                        x: { ticks: { color: '#9ca3af' }, grid: { color: '#1f2a40' } }
+                    }
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

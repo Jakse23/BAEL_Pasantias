@@ -7,6 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 import json
 from datetime import date
+from django.urls import reverse
 
 # Importación de modelos
 from system.models import System
@@ -16,6 +17,7 @@ from maintenances.models import Maintenances
 # Importar modelos de tareas, eventos y subsistemas
 from .models import AircraftTask, AircraftEvent, Subsystem
 
+
 @login_required
 def home(request):
     """Vista de bienvenida."""
@@ -23,6 +25,7 @@ def home(request):
         'first_name': request.user.first_name,
         'last_name': request.user.last_name,
     })
+
 
 @login_required
 def dashboard(request):
@@ -65,6 +68,7 @@ def dashboard(request):
         'last_name': request.user.last_name,
     })
 
+
 @login_required
 def dashboard_c130(request):
     """
@@ -103,12 +107,172 @@ def dashboard_c130(request):
 
     return render(request, 'dashboard_c130.html', context)
 
+
+# ==================== APARTADO TÉCNICO (CON SELECTOR DE FLOTA) ====================
+# ==================== APARTADO TÉCNICO (CON TABLAS DESPLEGABLES) ====================
+
+@login_required
+def apartado_tecnico(request):
+    """
+    Vista del Apartado Técnico para técnicos de mantenimiento.
+    Muestra todas las flotas agrupadas en tarjetas desplegables con buscador.
+    """
+    # Obtener todas las aeronaves
+    todas_aeronaves = System.objects.all().order_by('system', 'acronym')
+    
+    # Agrupar por tipo de flota
+    flotas_agrupadas = {}
+    for avion in todas_aeronaves:
+        flota = avion.system
+        if flota not in flotas_agrupadas:
+            flotas_agrupadas[flota] = []
+        flotas_agrupadas[flota].append(avion)
+    
+    # Calcular horas restantes para cada avión
+    VIDA_UTIL_TOTAL = 12000
+    for flota, aeronaves in flotas_agrupadas.items():
+        for avion in aeronaves:
+            horas_vuelo = avion.utility_life or 0
+            avion.horas_restantes = VIDA_UTIL_TOTAL - horas_vuelo
+            avion.horas_excedidas = horas_vuelo - VIDA_UTIL_TOTAL if horas_vuelo > VIDA_UTIL_TOTAL else 0
+    
+    context = {
+        'first_name': request.user.first_name,
+        'last_name': request.user.last_name,
+        'flotas_agrupadas': flotas_agrupadas,
+    }
+    
+    return render(request, 'home/apartado_tecnico.html', context)
+    return render(request, 'home/apartado_tecnico.html', context)
+
+# ==================== DASHBOARD GENERAL DE FLOTA C-130 ====================
+
+@login_required
+def c130_dashboard_general(request):
+    """
+    Vista general de la flota C-130 Hércules.
+    Muestra gráficas, inventario desplegable, mantenimientos y estadísticas.
+    Este es el dashboard que los supervisores/comandantes verán.
+    """
+    # Obtener todas las aeronaves C-130HV
+    flota_completa = System.objects.filter(system='C-130HV').order_by('acronym')
+    
+    # Estadísticas por condición
+    flota_operativos = flota_completa.filter(condition=0)
+    flota_mantenimiento = flota_completa.filter(condition=1)
+    flota_inoperativos = flota_completa.filter(condition=2)
+    
+    total = flota_completa.count()
+    operatividad = round((flota_operativos.count() / total) * 100) if total > 0 else 0
+    
+    # Datos para gráficas (convertir a listas para JavaScript)
+    aeronaves_labels = [avion.acronym for avion in flota_completa]
+    horas_data = [avion.utility_life or 0 for avion in flota_completa]
+    estados_data = [
+        flota_operativos.count(),
+        flota_mantenimiento.count(),
+        flota_inoperativos.count()
+    ]
+    
+    # Datos históricos de operatividad (simulados - puedes crear un modelo para almacenarlos)
+    historico_operatividad = [78, 82, 79, 85, 83, operatividad]
+    
+    # Vencimientos isocronales (ejemplo - ajusta según tus necesidades)
+    vencimientos = [
+        {'descripcion': 'Pesaje de Aeronave', 'dias': 30},
+        {'descripcion': 'Inspección de Corrosión', 'dias': 45},
+        {'descripcion': 'Control Meteorológico', 'dias': 60},
+        {'descripcion': 'Inspección Fase A', 'dias': 15},
+        {'descripcion': 'Overhaul Motor', 'dias': 90},
+    ]
+    
+    # Mantenimientos programados (ejemplo)
+    mantenimientos = [
+        {'descripcion': 'Inspección Fase C', 'dias': 14, 'matricula': 'C130J-01'},
+        {'descripcion': 'Revisión Tren Aterrizaje', 'dias': 29, 'matricula': 'C130H-02'},
+        {'descripcion': 'Prueba Hidrostática', 'dias': 45, 'matricula': 'C130J-03'},
+        {'descripcion': 'Cambio de Filtros', 'dias': 7, 'matricula': 'C130B-01'},
+    ]
+    
+    # Componentes críticos (ejemplo)
+    componentes = [
+        {'nombre': 'Motor T56-A-15 (#1)', 'horas': 450},
+        {'nombre': 'Motor T56-A-15 (#2)', 'horas': 820},
+        {'nombre': 'Motor T56-A-15 (#3)', 'horas': 820},
+        {'nombre': 'Motor T56-A-15 (#4)', 'horas': 612},
+        {'nombre': 'Hélice NP2000', 'horas': 974},
+    ]
+    
+    # Ciclos de mantenimiento
+    ciclos = [
+        {'nombre': 'Inspección Cada 25 Horas', 'estado': 'verde', 'descripcion': 'Completado'},
+        {'nombre': 'Inspección Cada 100 Horas', 'estado': 'amarillo', 'descripcion': 'Próximo en 12h'},
+        {'nombre': 'Inspección Cada 300 Horas', 'estado': 'verde', 'descripcion': 'Completado'},
+        {'nombre': 'Inspección Cada 600 Horas', 'estado': 'rojo', 'descripcion': 'Vence en 45h'},
+        {'nombre': 'Inspección Cada 1200 Horas', 'estado': 'amarillo', 'descripcion': 'Próximo en 120h'},
+        {'nombre': 'Overhaul General', 'estado': 'verde', 'descripcion': 'Programado para 2025'},
+    ]
+    
+    # Datos de calidad y personal
+    capacitacion_porcentaje = 96
+    capacitacion_vencido = 4
+    tecnicos_certificados = 18
+    total_tecnicos = 24
+    en_capacitacion = 3
+    por_vencer = 2
+    proximos_vencimientos = "Técnico A (5 días), Técnico C (18 días)"
+    
+    # Calcular total de tareas activas (opcional - si tienes el modelo AircraftTask)
+    total_tareas_activas = AircraftTask.objects.filter(
+        aircraft__in=flota_completa,
+        status__in=['pending', 'in_progress']
+    ).count()
+    
+    context = {
+        # Datos de flota
+        'flota_completa': flota_completa,
+        'flota_operativos': flota_operativos,
+        'flota_mantenimiento': flota_mantenimiento,
+        'flota_inoperativos': flota_inoperativos,
+        'operatividad': operatividad,
+        'total_aeronaves': total,
+        
+        # Datos para gráficas (JSON serializados)
+        'aeronaves_labels': json.dumps(aeronaves_labels),
+        'horas_data': json.dumps(horas_data),
+        'estados_data': json.dumps(estados_data),
+        'historico_operatividad': json.dumps(historico_operatividad),
+        
+        # Datos para secciones
+        'vencimientos': vencimientos,
+        'mantenimientos': mantenimientos,
+        'componentes': componentes,
+        'ciclos': ciclos,
+        'total_tareas_activas': total_tareas_activas,
+        
+        # Datos de calidad
+        'capacitacion_porcentaje': capacitacion_porcentaje,
+        'capacitacion_vencido': capacitacion_vencido,
+        'tecnicos_certificados': tecnicos_certificados,
+        'total_tecnicos': total_tecnicos,
+        'en_capacitacion': en_capacitacion,
+        'por_vencer': por_vencer,
+        'proximos_vencimientos': proximos_vencimientos,
+        
+        # Datos de usuario
+        'first_name': request.user.first_name,
+        'last_name': request.user.last_name,
+    }
+    
+    return render(request, 'home/dashboard_general.html', context)
+
+
 # ==================== CRUD PARA C-130 ====================
 
 @login_required
 def c130_list(request):
     """Lista todos los C-130 Hércules"""
-    c130_list = System.objects.filter(system='C-130HV').order_by('id')
+    c130_list = System.objects.filter(system='C-130HV').order_by('acronym')
     
     context = {
         'c130_list': c130_list,
@@ -117,78 +281,190 @@ def c130_list(request):
     }
     return render(request, 'home/c130_list.html', context)
 
+
+@login_required
 @login_required
 def c130_create(request):
-    """Crear un nuevo C-130"""
+    """
+    Crear una nueva aeronave para cualquier flota.
+    Permite seleccionar el tipo de flota libremente.
+    """
+    # Obtener todas las flotas disponibles desde la base de datos
+    flotas_disponibles = System.objects.values_list('system', flat=True).distinct().order_by('system')
+    
+    # Si no hay flotas, definir algunas por defecto
+    if not flotas_disponibles:
+        flotas_disponibles = [
+            'C-130HV', 'Y8F200W', 'SD-360', 'F-16', 'SU 30 MK2', 
+            'K8W', 'AS-532', 'AS-332B1', 'MI-17', 'MI-17V5', 'EN-480B', 'EN-280FX'
+        ]
+    
+    # Obtener flota del parámetro GET (para precargar desde botones)
+    flota_precargada = request.GET.get('flota', '')
+    
     if request.method == 'POST':
-        acronym = request.POST.get('acronym')
+        # Obtener datos del formulario
+        flota = request.POST.get('system', '').strip()
+        acronym = request.POST.get('acronym', '').strip().upper()
         condition = request.POST.get('condition', 1)
         status = request.POST.get('status', 0)
-        utility_life = request.POST.get('utility_life', 0)
+        horas_vuelo = request.POST.get('utility_life', 0)
         fk_group_id = request.POST.get('fk_group_id', 3)
         
-        if System.objects.filter(acronym=acronym).exists():
-            messages.error(request, f'Ya existe una aeronave con la matrícula {acronym}')
-            return render(request, 'home/c130_form.html', {'title': 'Crear C-130'})
+        # ========== VALIDACIONES ==========
+        if not flota:
+            messages.error(request, '❌ El tipo de flota es requerido')
+            context = {
+                'title': 'Crear Nueva Aeronave',
+                'flotas_disponibles': flotas_disponibles,
+                'flota_seleccionada': flota_precargada,
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name,
+            }
+            return render(request, 'home/c130_form.html', context)
         
-        new_c130 = System(
-            system='C-130HV',
-            acronym=acronym,
-            condition=condition,
-            status=status,
-            utility_life=utility_life,
-            fk_group_id=fk_group_id
-        )
-        new_c130.save()
-        messages.success(request, f'Aeronave {acronym} creada exitosamente')
-        return redirect('home:c130_list')
+        if not acronym:
+            messages.error(request, '❌ La matrícula es requerida')
+            context = {
+                'title': 'Crear Nueva Aeronave',
+                'flotas_disponibles': flotas_disponibles,
+                'flota_seleccionada': flota,
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name,
+            }
+            return render(request, 'home/c130_form.html', context)
+        
+        # Validar que la matrícula no exista ya (sin importar la flota)
+        if System.objects.filter(acronym=acronym).exists():
+            messages.error(request, f'❌ Ya existe una aeronave con la matrícula {acronym}')
+            context = {
+                'title': 'Crear Nueva Aeronave',
+                'flotas_disponibles': flotas_disponibles,
+                'flota_seleccionada': flota,
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name,
+            }
+            return render(request, 'home/c130_form.html', context)
+        
+        # Validar horas de vuelo (no pueden ser negativas)
+        try:
+            horas_vuelo_int = int(horas_vuelo) if horas_vuelo else 0
+            if horas_vuelo_int < 0:
+                messages.error(request, '❌ Las horas de vuelo no pueden ser negativas')
+                context = {
+                    'title': 'Crear Nueva Aeronave',
+                    'flotas_disponibles': flotas_disponibles,
+                    'flota_seleccionada': flota,
+                    'first_name': request.user.first_name,
+                    'last_name': request.user.last_name,
+                }
+                return render(request, 'home/c130_form.html', context)
+        except ValueError:
+            messages.error(request, '❌ Las horas de vuelo deben ser un número válido')
+            context = {
+                'title': 'Crear Nueva Aeronave',
+                'flotas_disponibles': flotas_disponibles,
+                'flota_seleccionada': flota,
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name,
+            }
+            return render(request, 'home/c130_form.html', context)
+        
+        # ========== CREAR LA AERONAVE ==========
+        try:
+            new_aircraft = System(
+                system=flota,
+                acronym=acronym,
+                condition=int(condition),
+                status=int(status) if status else 0,
+                utility_life=horas_vuelo_int,
+                fk_group_id=int(fk_group_id)
+            )
+            new_aircraft.save()
+            
+            messages.success(request, f'✅ Aeronave {acronym} creada exitosamente en la flota {flota}')
+            return redirect('home:apartado_tecnico')
+            
+        except Exception as e:
+            messages.error(request, f'❌ Error al crear la aeronave: {str(e)}')
+            context = {
+                'title': 'Crear Nueva Aeronave',
+                'flotas_disponibles': flotas_disponibles,
+                'flota_seleccionada': flota,
+                'first_name': request.user.first_name,
+                'last_name': request.user.last_name,
+            }
+            return render(request, 'home/c130_form.html', context)
     
+    # ========== GET REQUEST - Mostrar formulario ==========
     context = {
-        'title': 'Crear C-130',
+        'title': '✈️ Crear Nueva Aeronave',
+        'flotas_disponibles': flotas_disponibles,
+        'flota_seleccionada': flota_precargada,
         'first_name': request.user.first_name,
         'last_name': request.user.last_name,
     }
     return render(request, 'home/c130_form.html', context)
+
 
 @login_required
 def c130_update(request, pk):
     """Actualizar un C-130 existente"""
-    c130 = get_object_or_404(System, pk=pk, system='C-130HV')
+    c130 = get_object_or_404(System, pk=pk)
+    
+    # Obtener la flota desde el GET o usar el sistema de la aeronave
+    flota = request.GET.get('flota', c130.system)
     
     if request.method == 'POST':
-        c130.acronym = request.POST.get('acronym')
-        c130.condition = request.POST.get('condition', 1)
-        c130.status = request.POST.get('status', 0)
-        c130.utility_life = request.POST.get('utility_life', 0)
+        acronym = request.POST.get('acronym')
+        condition = request.POST.get('condition', 1)
+        status = request.POST.get('status', 0)
+        horas_vuelo = request.POST.get('horas_vuelo', 0)
+        
+        # Validar que no haya duplicado (excepto el mismo)
+        if System.objects.filter(acronym=acronym).exclude(pk=pk).exists():
+            messages.error(request, f'Ya existe otra aeronave con la matrícula {acronym}')
+            return render(request, 'home/c130_form.html', {'title': 'Editar C-130', 'c130': c130, 'flota': flota})
+        
+        c130.acronym = acronym.upper()
+        c130.condition = int(condition)
+        c130.status = int(status) if status else 0
+        c130.utility_life = int(horas_vuelo) if horas_vuelo else 0
         c130.save()
+        
         messages.success(request, f'Aeronave {c130.acronym} actualizada exitosamente')
-        return redirect('home:c130_list')
+        return redirect(f'{reverse("home:apartado_tecnico")}?flota={flota}')
     
     context = {
         'c130': c130,
         'title': 'Editar C-130',
+        'flota': flota,
         'first_name': request.user.first_name,
         'last_name': request.user.last_name,
     }
     return render(request, 'home/c130_form.html', context)
 
+
 @login_required
 def c130_delete(request, pk):
     """Eliminar un C-130"""
-    c130 = get_object_or_404(System, pk=pk, system='C-130HV')
+    c130 = get_object_or_404(System, pk=pk)
+    flota = request.GET.get('flota', c130.system)
     
     if request.method == 'POST':
         acronym = c130.acronym
         c130.delete()
         messages.success(request, f'Aeronave {acronym} eliminada exitosamente')
-        return redirect('home:c130_list')
+        return redirect(f'{reverse("home:apartado_tecnico")}?flota={flota}')
     
     context = {
         'c130': c130,
+        'flota': flota,
         'first_name': request.user.first_name,
         'last_name': request.user.last_name,
     }
     return render(request, 'home/c130_confirm_delete.html', context)
+
 
 # ==================== VISTA DE DETALLE PARA C-130 ====================
 
@@ -237,6 +513,30 @@ def c130_detail(request, pk):
         'last_name': request.user.last_name,
     }
     return render(request, 'home/c130_detail.html', context)
+
+
+# ==================== VISTA DETALLE COMPLETO DE AERONAVE ====================
+
+@login_required
+def aeronave_detalle_completo(request, pk):
+    """
+    Vista completa de una aeronave específica (SOLO LECTURA).
+    """
+    aeronave = get_object_or_404(System, pk=pk)
+    
+    # Datos básicos
+    context = {
+        'aeronave': aeronave,
+        'total_componentes': 0,
+        'horas_vuelo': aeronave.utility_life or 0,
+        'horas_restantes': 12000 - (aeronave.utility_life or 0),
+        'porcentaje_cumplimiento': 0,
+        'first_name': request.user.first_name,
+        'last_name': request.user.last_name,
+    }
+    
+    return render(request, 'home/aeronave_detalle_completo.html', context)
+
 
 # ==================== API PARA TAREAS ====================
 
@@ -497,7 +797,6 @@ def update_subsystem(request, c130_id):
         if not subsystem_name or new_percentage is None:
             return JsonResponse({'success': False, 'error': 'Faltan datos: subsystem y percentage son requeridos'}, status=400)
         
-        # CONVERTIR A ENTERO - Esto es CRÍTICO
         try:
             new_percentage = int(new_percentage)
         except (ValueError, TypeError):
@@ -553,7 +852,6 @@ def update_all_subsystems(request, c130_id):
         if new_aeronavegabilidad is None:
             return JsonResponse({'success': False, 'error': 'El porcentaje de aeronavegabilidad es requerido'}, status=400)
         
-        # CONVERTIR A ENTERO - Esto es CRÍTICO
         try:
             new_aeronavegabilidad = int(new_aeronavegabilidad)
         except (ValueError, TypeError):

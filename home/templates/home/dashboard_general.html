@@ -1,0 +1,431 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>OMAC Dashboard | Flota C-130 Hércules</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- CSS: PRIMERO home.css (sidebar y estilos base) -->
+    <link rel="stylesheet" href="{% static 'assets/css/home.css' %}">
+    
+    <!-- CSS: DESPUÉS dashboard_general.css (estilos del dashboard) -->
+    <link rel="stylesheet" href="{% static 'assets/css/home/dashboard_general.css' %}">
+</head>
+<body>
+    <div class="main-container">
+        <!-- SIDEBAR -->
+        <nav class="sidebar">
+            <div class="nav-menu">
+                <div class="nav-item">
+                    <a href="/home/dashboard/" class="nav-link" id="btnInicio">
+                        <img src="{% static 'assets/img/hangar.png' %}" class="logo" alt="DIMADEA">
+                        <span class="nav-label">Inicio</span>
+                    </a>
+                </div>
+
+                <!-- Flotas con submenú -->
+                <div class="nav-item has-submenu">
+                    <div class="nav-link dropdown-trigger">
+                        <i class="fas fa-plane"></i>
+                        <span class="nav-label">Flotas</span>
+                        <i class="fas fa-chevron-down arrow-icon"></i>
+                    </div>
+                    <div class="submenu">
+                        <!-- ====== APARTADO TÉCNICO ====== -->
+                        <a href="{% url 'home:apartado_tecnico' %}" class="subnav-link" style="background: rgba(30, 136, 229, 0.1); border-left: 3px solid #64B5F6; margin-bottom: 8px; text-decoration: none;">
+                            <i class="fas fa-tools"></i>
+                            <span>📋 Apartado Técnico</span>
+                        </a>
+                        
+                        <!-- Separador visual -->
+                        <div style="height: 1px; background: rgba(30, 136, 229, 0.2); margin: 5px 20px 10px 20px;"></div>
+                        
+                        <!-- Aeronaves -->
+                        <a href="javascript:void(0);" class="subnav-link" data-fleet="c130">
+                            <i class="fas fa-plane"></i>
+                            <span>C-130 Hércules</span>
+                        </a>
+                        <div class="subnav-link" data-fleet="f16">
+                            <i class="fas fa-fighter-jet"></i>
+                            <span>F-16 Fighting Falcon</span>
+                        </div>
+                        <div class="subnav-link" data-fleet="cougar">
+                            <i class="fas fa-helicopter"></i>
+                            <span>AS-532 Cougar</span>
+                        </div>
+                        <div class="subnav-link" data-fleet="b737">
+                            <i class="fas fa-plane"></i>
+                            <span>B-737</span>
+                        </div>
+                        <div class="subnav-link" data-fleet="f900">
+                            <i class="fas fa-business-time"></i>
+                            <span>F-900 EX</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mantenimiento con submenú -->
+                <div class="nav-item has-submenu">
+                    <div class="nav-link dropdown-trigger">
+                        <i class="fas fa-tools"></i>
+                        <span class="nav-label">Mantenimiento</span>
+                        <i class="fas fa-chevron-down arrow-icon"></i>
+                    </div>
+                    <div class="submenu">
+                        <div class="subnav-link" data-page="ordenes_mantenimiento">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Órdenes de Mantenimiento</span>
+                        </div>
+                        <div class="subnav-link" data-page="dispatch">
+                            <i class="fas fa-truck"></i>
+                            <span>Órdenes de Despacho</span>
+                        </div>
+                        <div class="subnav-link" data-page="requisition">
+                            <i class="fas fa-file-alt"></i>
+                            <span>Órdenes de Requisición</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Inventario con submenú -->
+                <div class="nav-item has-submenu">
+                    <div class="nav-link dropdown-trigger">
+                        <i class="fas fa-boxes"></i>
+                        <span class="nav-label">Inventario</span>
+                        <i class="fas fa-chevron-down arrow-icon"></i>
+                    </div>
+                    <div class="submenu">
+                        <div class="subnav-link" data-page="componentes">
+                            <i class="fas fa-microchip"></i>
+                            <span>Componentes</span>
+                        </div>
+                        <div class="subnav-link" data-page="stock">
+                            <i class="fas fa-warehouse"></i>
+                            <span>Stock</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compras con submenú -->
+                <div class="nav-item has-submenu">
+                    <div class="nav-link dropdown-trigger">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="nav-label">Compras</span>
+                        <i class="fas fa-chevron-down arrow-icon"></i>
+                    </div>
+                    <div class="submenu">
+                        <div class="subnav-link" data-page="ordenes_compra">
+                            <i class="fas fa-file-invoice"></i>
+                            <span>Órdenes de Compra</span>
+                        </div>
+                        <div class="subnav-link" data-page="recepcion">
+                            <i class="fas fa-dolly"></i>
+                            <span>Órdenes de Recepción</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="nav-footer">
+                <form action="/logout/" method="post" id="logoutForm" style="margin: 0; width: 100%;">
+                    {% csrf_token %}
+                    <button type="submit" id="logoutBtn" class="nav-link">
+                        <i class="fas fa-sign-out-alt"></i>
+                        <span class="nav-label">Cerrar Sesión</span>
+                    </button>
+                </form>
+            </div>
+        </nav>
+
+        <!-- CONTENIDO PRINCIPAL DEL DASHBOARD -->
+        <div class="content">
+            <!-- BOTONES DE NAVEGACIÓN -->
+            <div class="nav-buttons" style="display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap;">
+                <a href="javascript:void(0);" onclick="volverATransporte()" class="btn-back" style="background: linear-gradient(135deg, #0D47A1, #0a1a3a); border: 1px solid #64B5F6; color: #ffffff; padding: 10px 20px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px; cursor: pointer;">
+                    <i class="fas fa-arrow-left"></i> Volver a Flota de Transporte
+                </a>
+                <a href="/home/dashboard/" class="btn-back" style="background: linear-gradient(135deg, #0D47A1, #0a1a3a); border: 1px solid #64B5F6; color: #ffffff; padding: 10px 20px; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-home"></i> Ir al Inicio
+                </a>
+            </div>
+
+            <div class="dashboard">
+                <!-- CABECERA PRINCIPAL -->
+                <div class="cabecera">
+                    <div class="titulo-area">
+                        <div class="emblema">
+                            <i class="fas fa-fighter-jet"></i>
+                        </div>
+                        <div>
+                            <h1>FLOTA C-130 HÉRCULES</h1>
+                            <p>Sistema de Monitoreo y Control | Comando de Mantenimiento Aeronáutico</p>
+                        </div>
+                    </div>
+                    <div class="fecha-hora">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span id="fechaActual"></span>
+                        <i class="fas fa-clock"></i>
+                        <span id="horaActual"></span>
+                    </div>
+                </div>
+
+                <!-- INVENTARIO DE FLOTA (DESPLEGABLE) -->
+                <div class="inventario-container">
+                    <div class="inventario-header" onclick="toggleInventario()">
+                        <div class="inventario-titulo">
+                            <i class="fas fa-table-list"></i>
+                            <h3>INVENTARIO DE LA FLOTA</h3>
+                            <span class="total-badge" id="totalUnidades">Total: {{ total_aeronaves }} unidades</span>
+                        </div>
+                        <div class="toggle-icon" id="toggleIcon">
+                            <i class="fas fa-chevron-up"></i>
+                        </div>
+                    </div>
+                    <div class="inventario-contenido" id="inventarioContenido">
+                        <div class="tabla-responsive">
+                            <table class="tabla-flota">
+                                <thead>
+                                    <tr>
+                                        <th>MATRÍCULA</th>
+                                        <th>SISTEMA / MODELO</th>
+                                        <th>CONDICIÓN</th>
+                                        <th>HORAS ACUMULADAS</th>
+                                        <th>VIDA ÚTIL TOTAL</th>
+                                        <th>HORAS RESTANTES</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="tablaAeronaves">
+                                    <!-- Datos desde JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 3 GRÁFICAS -->
+                <div class="panel-graficas">
+                    <div class="grafica-tarjeta operatividad-card">
+                        <div class="grafica-titulo">
+                            <i class="fas fa-chart-line"></i> EVOLUCIÓN DE OPERATIVIDAD (6 MESES)
+                            <span class="tendencia-badge" id="tendenciaBadge">📈 +3%</span>
+                        </div>
+                        <canvas id="graficaOperatividad" height="150"></canvas>
+                        <div class="estadisticas-operatividad">
+                            <div class="operatividad-item"><span class="label">Máximo</span><span class="value" id="maxOperatividad">85%</span></div>
+                            <div class="operatividad-item"><span class="label">Mínimo</span><span class="value" id="minOperatividad">78%</span></div>
+                            <div class="operatividad-item"><span class="label">Promedio</span><span class="value" id="promedioOperatividad">81.5%</span></div>
+                            <div class="operatividad-item"><span class="label">Actual</span><span class="value actual" id="actualOperatividad">{{ operatividad }}%</span></div>
+                        </div>
+                    </div>
+                    <div class="grafica-tarjeta">
+                        <div class="grafica-titulo"><i class="fas fa-chart-bar"></i> HORAS DE VUELO POR AERONAVE</div>
+                        <canvas id="graficaHoras" height="150"></canvas>
+                    </div>
+                    <div class="grafica-tarjeta">
+                        <div class="grafica-titulo"><i class="fas fa-chart-pie"></i> DISTRIBUCIÓN DE FLOTA POR ESTADO</div>
+                        <canvas id="graficaEstado" height="150"></canvas>
+                        <div class="estadisticas-rapidas" id="estadisticasRapidas"></div>
+                    </div>
+                </div>
+
+                <!-- FILA 1: OTs + VENCIMIENTOS + COMPONENTES -->
+                <div class="fila-tres-columnas">
+                    <div class="tarjeta-seccion">
+                        <div class="tarjeta-titulo"><i class="fas fa-clipboard-list"></i> ÓRDENES DE TRABAJO ACTIVAS</div>
+                        <div class="ots-lista" id="otsLista"></div>
+                    </div>
+                    <div class="tarjeta-seccion">
+                        <div class="tarjeta-titulo"><i class="fas fa-clock"></i> VENCIMIENTOS ISOCRONALES</div>
+                        <div class="vencimientos-lista" id="vencimientosLista"></div>
+                    </div>
+                    <div class="tarjeta-seccion">
+                        <div class="tarjeta-titulo"><i class="fas fa-microchip"></i> COMPONENTES CRÍTICOS (VIDA ÚTIL)</div>
+                        <div class="componentes-lista" id="componentesLista"></div>
+                        <div class="nota-informativa">⚠️ Motor #1 requiere atención programada (450 horas remanentes)</div>
+                    </div>
+                </div>
+
+                <!-- FILA 2: MANTENIMIENTO -->
+                <div class="fila-mantenimiento">
+                    <div class="tarjeta-mantenimiento">
+                        <div class="tarjeta-titulo"><i class="fas fa-calendar-week"></i> CALENDARIO DE MANTENIMIENTO (PRÓXIMOS 90 DÍAS)</div>
+                        <div class="calendario-lista" id="calendarioMantenimiento"></div>
+                    </div>
+                    <div class="tarjeta-mantenimiento">
+                        <div class="tarjeta-titulo"><i class="fas fa-sync-alt"></i> MANTENIMIENTO POR CICLOS ISOCRONALES</div>
+                        <div class="ciclos-lista" id="ciclosMantenimiento"></div>
+                    </div>
+                </div>
+
+                <!-- FILA 3: CALIDAD Y PERSONAL -->
+                <div class="fila-calidad">
+                    <div class="calidad-principal">
+                        <div class="calidad-header">
+                            <i class="fas fa-users"></i> CALIDAD Y PERSONAL (RAV 60)
+                            <span class="calidad-sub">Gestión de Certificaciones Técnicas</span>
+                        </div>
+                        <div class="calidad-grid">
+                            <div class="calidad-anillo">
+                                <canvas id="anilloCapacitacion" width="90" height="90"></canvas>
+                                <div class="anillo-texto" id="porcentajeCapacitacion">{{ capacitacion_porcentaje }}%</div>
+                            </div>
+                            <div class="calidad-barras">
+                                <div class="calidad-barra-item">
+                                    <div class="barra-label"><span>Capacitación al día</span><strong id="capacitacionDia">{{ capacitacion_porcentaje }}%</strong></div>
+                                    <div class="barra-progreso"><div class="barra-lleno verde" id="barraCapacitacion" style="width: {{ capacitacion_porcentaje }}%"></div></div>
+                                </div>
+                                <div class="calidad-barra-item">
+                                    <div class="barra-label"><span>Capacitación vencida</span><strong id="capacitacionVencida">{{ capacitacion_vencido }}%</strong></div>
+                                    <div class="barra-progreso"><div class="barra-lleno rojo" style="width: {{ capacitacion_vencido }}%"></div></div>
+                                </div>
+                            </div>
+                            <div class="calidad-stats">
+                                <div class="stat-cert"><i class="fas fa-certificate"></i><span><strong id="tecnicosCertificados">{{ tecnicos_certificados }}</strong>/{{ total_tecnicos }} Técnicos Certificados</span></div>
+                                <div class="stat-cert"><i class="fas fa-user-graduate"></i><span><strong id="enCapacitacion">{{ en_capacitacion }}</strong> En Capacitación</span></div>
+                                <div class="stat-cert warning"><i class="fas fa-hourglass-half"></i><span><strong id="porVencer">{{ por_vencer }}</strong> Por Vencer (30 días)</span></div>
+                            </div>
+                        </div>
+                        <div class="calidad-footer">
+                            <i class="fas fa-exclamation-triangle"></i> Próximos vencimientos:
+                            <span id="proximosVencimientos">{{ proximos_vencimientos }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PIE DE FIRMA -->
+                <div class="pie-firma">
+                    <div class="firma-info"><i class="fas fa-lock"></i> VALIDACIÓN DE LÓGICA DE FIRMA - BLOQUEO ACTIVO</div>
+                    <div class="firma-detalle"><span><i class="fas fa-id-card"></i> Licencia #12345 (Técnico A)</span><span><i class="fas fa-exclamation-triangle"></i> Curso FH Vencido</span></div>
+                    <div class="firma-estado"><i class="fas fa-fingerprint"></i> Módulo Auditoría Activo</div>
+                </div>
+
+                <div class="pie-pagina"><i class="fas fa-sync-alt"></i> Última actualización: <span id="ultimaActualizacion"></span> | Sistema de Monitoreo y Control | Datos en tiempo real</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- PASAR DATOS DE DJANGO A JAVASCRIPT -->
+    <script>
+        // Datos de la flota desde Django
+        window.flotaDatos = [
+            {% for avion in flota_completa %}
+            {
+                id: {{ avion.id }},
+                matricula: "{{ avion.acronym }}",
+                sistema: "{{ avion.system }}",
+                condicion: {{ avion.condition }},
+                horas: {{ avion.utility_life|default:0 }},
+                vidaUtil: 12000
+            },
+            {% endfor %}
+        ];
+        
+        // Datos para gráficas
+        window.aeronavesLabels = {{ aeronaves_labels|safe }};
+        window.horasData = {{ horas_data|safe }};
+        window.estadosData = {{ estados_data|safe }};
+        window.historicoOperatividad = {{ historico_operatividad|safe }};
+        
+        // Datos de secciones
+        window.vencimientos = {{ vencimientos|safe }};
+        window.mantenimientos = {{ mantenimientos|safe }};
+        window.componentes = {{ componentes|safe }};
+        window.ciclos = {{ ciclos|safe }};
+        
+        console.log("✅ Datos de Django cargados:", window.flotaDatos.length, "aeronaves");
+    </script>
+
+    <!-- JS del Dashboard -->
+    <script src="{% static 'assets/js/home/dashboard_general.js' %}"></script>
+
+    <script>
+        // Función para desplegar/ocultar inventario
+        window.toggleInventario = function() {
+            var contenido = document.getElementById('inventarioContenido');
+            var icono = document.getElementById('toggleIcon');
+            if (contenido.classList.contains('oculto')) {
+                contenido.classList.remove('oculto');
+                icono.classList.remove('cerrado');
+            } else {
+                contenido.classList.add('oculto');
+                icono.classList.add('cerrado');
+            }
+        };
+
+        // Función para desplegar/ocultar submenús
+        document.querySelectorAll('.dropdown-trigger').forEach(function(trigger) {
+            trigger.addEventListener('click', function(e) {
+                e.stopPropagation();
+                var parent = this.closest('.has-submenu');
+                var submenu = parent.querySelector('.submenu');
+                submenu.classList.toggle('open');
+                var arrow = this.querySelector('.arrow-icon');
+                if (arrow) {
+                    arrow.style.transform = submenu.classList.contains('open') ? 'rotate(180deg)' : '';
+                }
+            });
+        });
+
+        // Función para volver a Flota de Transporte
+        function volverATransporte() {
+            sessionStorage.setItem('categoria_abierta', 'transporte');
+            window.location.href = '/home/dashboard/';
+        }
+
+        // Función para renderizar la tabla con onclick
+        function renderizarTablaConOnclick() {
+            const tbody = document.getElementById('tablaAeronaves');
+            if (!tbody) return;
+            
+            const flotaDatos = window.flotaDatos || [];
+            
+            tbody.innerHTML = '';
+            
+            flotaDatos.forEach(avion => {
+                const row = tbody.insertRow();
+                const horasRestantes = avion.vidaUtil - avion.horas;
+                
+                let condicionBadge = '';
+                if (avion.condicion === 0) condicionBadge = '<span class="estado-insignia estado-operativo">OPERATIVO</span>';
+                else if (avion.condicion === 1) condicionBadge = '<span class="estado-insignia estado-mantenimiento">MANTENIMIENTO</span>';
+                else condicionBadge = '<span class="estado-insignia estado-inoperativo">INOPERATIVO</span>';
+                
+                let horasClase = '';
+                if (horasRestantes < 500) horasClase = 'peligro';
+                else if (horasRestantes < 1000) horasClase = 'alerta';
+                
+                row.innerHTML = `
+                    <td><strong>${avion.matricula}</strong></span>
+                    <td>${avion.sistema}</span>
+                    <td>${condicionBadge}</span>
+                    <td>${avion.horas.toLocaleString()} horas</span>
+                    <td>${avion.vidaUtil.toLocaleString()} horas</span>
+                    <td><span class="horas-restantes ${horasClase}">${horasRestantes.toLocaleString()} horas</span></span>
+                `;
+                
+                // IMPORTANTE: Redirige a la página de detalle completo de la aeronave
+                row.style.cursor = 'pointer';
+                row.addEventListener('click', () => {
+                    window.location.href = `/home/aeronave/${avion.id}/detalle-completo/`;
+                });
+            });
+        }
+        
+        // Llamar a la función cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            renderizarTablaConOnclick();
+        });
+    </script>
+</body>
+</html>

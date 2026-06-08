@@ -2,68 +2,139 @@
 {% load static %}
 
 {% block content %}
-<div class="app-content-header">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-sm-6">
-                <h3 class="mb-0">{{ title }} - C-130 Hércules</h3>
-            </div>
+<div class="form-container">
+    <div class="form-card">
+        <div class="form-card-header">
+            <h3><i class="fas fa-plus-circle"></i> {{ title }}</h3>
+            <p>Complete la información de la aeronave</p>
+        </div>
+        <div class="form-card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label><i class="fas fa-layer-group"></i> TIPO DE FLOTA <span style="color: #ff5252;">*</span></label>
+                    {% if flota and not c130 %}
+                        {# Si viene un parámetro flota desde el selector, lo preseleccionamos pero permitimos cambiarlo #}
+                        <select name="system" id="system" class="form-control-modern" required>
+                            <option value="">-- Seleccione una flota --</option>
+                            <option value="C-130HV" {% if flota == 'C-130HV' %}selected{% endif %}>C-130 Hércules</option>
+                            <option value="Y8F200W" {% if flota == 'Y8F200W' %}selected{% endif %}>Y8F-200W</option>
+                            <option value="SD-360" {% if flota == 'SD-360' %}selected{% endif %}>SD-360</option>
+                            <option value="SU 30 MK2" {% if flota == 'SU 30 MK2' %}selected{% endif %}>SU-30 MK2</option>
+                            <option value="F-16" {% if flota == 'F-16' %}selected{% endif %}>F-16 Fighting Falcon</option>
+                            <option value="AS-532" {% if flota == 'AS-532' %}selected{% endif %}>AS-532 Cougar</option>
+                            <option value="MI-17" {% if flota == 'MI-17' %}selected{% endif %}>MI-17</option>
+                            <option value="K-8W" {% if flota == 'K-8W' %}selected{% endif %}>K-8W</option>
+                            <option value="B-737" {% if flota == 'B-737' %}selected{% endif %}>B-737</option>
+                            <option value="SD-360" {% if flota == 'SD-360' %}selected{% endif %}>SD-360</option>
+                            <option value="EN-480B" {% if flota == 'EN-480B' %}selected{% endif %}>EN-480B</option>
+                            <option value="EN-280FX" {% if flota == 'EN-280FX' %}selected{% endif %}>EN-280FX</option>
+                            <option value="AS-332B1" {% if flota == 'AS-332B1' %}selected{% endif %}>AS-332B1</option>
+                            <option value="MI-17V5" {% if flota == 'MI-17V5' %}selected{% endif %}>MI-17V5</option>
+                        </select>
+                    {% else %}
+                        {# Formulario normal sin precarga #}
+                        <select name="system" id="system" class="form-control-modern" required>
+                            <option value="">-- Seleccione una flota --</option>
+                            <option value="C-130HV" {% if c130.system == 'C-130HV' %}selected{% endif %}>C-130 Hércules</option>
+                            <option value="Y8F200W" {% if c130.system == 'Y8F200W' %}selected{% endif %}>Y8F-200W</option>
+                            <option value="SD-360" {% if c130.system == 'SD-360' %}selected{% endif %}>SD-360</option>
+                            <option value="SU 30 MK2" {% if c130.system == 'SU 30 MK2' %}selected{% endif %}>SU-30 MK2</option>
+                            <option value="F-16" {% if c130.system == 'F-16' %}selected{% endif %}>F-16 Fighting Falcon</option>
+                            <option value="AS-532" {% if c130.system == 'AS-532' %}selected{% endif %}>AS-532 Cougar</option>
+                            <option value="MI-17" {% if c130.system == 'MI-17' %}selected{% endif %}>MI-17</option>
+                            <option value="K-8W" {% if c130.system == 'K-8W' %}selected{% endif %}>K-8W</option>
+                            <option value="B-737" {% if c130.system == 'B-737' %}selected{% endif %}>B-737</option>
+                            <option value="SD-360" {% if c130.system == 'SD-360' %}selected{% endif %}>SD-360</option>
+                            <option value="EN-480B" {% if c130.system == 'EN-480B' %}selected{% endif %}>EN-480B</option>
+                            <option value="EN-280FX" {% if c130.system == 'EN-280FX' %}selected{% endif %}>EN-280FX</option>
+                            <option value="AS-332B1" {% if c130.system == 'AS-332B1' %}selected{% endif %}>AS-332B1</option>
+                            <option value="MI-17V5" {% if c130.system == 'MI-17V5' %}selected{% endif %}>MI-17V5</option>
+                        </select>
+                    {% endif %}
+                    <small class="text-muted">Seleccione el tipo de aeronave (C-130, F-16, SU-30, MI-17, etc.)</small>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-id-card"></i> MATRÍCULA / SERIAL <span style="color: #ff5252;">*</span></label>
+                    <input type="text" name="acronym" id="acronym" class="form-control-modern" value="{{ c130.acronym|default:'' }}" placeholder="Ejemplo: FAV-4409, C130H-01, F16-001" required>
+                    <small class="text-muted">Ingrese la matrícula única de la aeronave</small>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-chart-line"></i> CONDICIÓN OPERATIVA</label>
+                    <select name="condition" id="condition" class="form-control-modern">
+                        <option value="0" {% if c130.condition == 0 %}selected{% endif %}>✅ Operativo</option>
+                        <option value="1" {% if c130.condition == 1 %}selected{% endif %}>🔧 En Mantenimiento</option>
+                        <option value="2" {% if c130.condition == 2 %}selected{% endif %}>⚠️ Inoperativo</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-hourglass-half"></i> HORAS DE VUELO</label>
+                    <input type="number" name="utility_life" id="utility_life" class="form-control-modern" value="{{ c130.utility_life|default:'0' }}" placeholder="0" step="1" min="0">
+                    <small class="text-muted">Horas de vuelo acumuladas por la aeronave</small>
+                </div>
+                
+                <div class="form-group">
+                    <label><i class="fas fa-industry"></i> VIDA ÚTIL TOTAL</label>
+                    <input type="text" class="form-control-modern" value="12,000 horas" readonly>
+                    <small class="text-muted">Horas límite establecidas por el fabricante</small>
+                </div>
+                
+                <!-- Campos ocultos -->
+                <input type="hidden" name="status" value="0">
+                <input type="hidden" name="fk_group_id" value="3">
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-modern btn-save">
+                        <i class="fas fa-save"></i> Guardar Aeronave
+                    </button>
+                    <a href="{% url 'home:apartado_tecnico' %}" class="btn-modern btn-cancel">
+                        <i class="fas fa-times"></i> Cancelar
+                    </a>
+                </div>
+                
+                <div class="info-note">
+                    <i class="fas fa-info-circle"></i> Los campos marcados con <span style="color: #ff5252;">*</span> son obligatorios.<br>
+                    <i class="fas fa-calculator"></i> Las <strong>Horas Restantes</strong> se calculan automáticamente como: <strong>Vida Útil Total - Horas de Vuelo</strong>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
-<div class="app-content">
-    <div class="container-fluid">
-        <div class="card">
-            <div class="card-body">
-                <form method="post">
-                    {% csrf_token %}
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="system" class="form-label">Tipo de Aeronave</label>
-                            <input type="text" name="system" id="system" class="form-control" value="C-130HV" readonly>
-                            <small class="text-muted">El tipo está fijado como C-130HV</small>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="acronym" class="form-label">Serial / Matrícula *</label>
-                            <input type="text" name="acronym" id="acronym" class="form-control" value="{{ c130.acronym|default:'' }}" required>
-                            <small class="text-muted">Ejemplo: FAV 4409 (9508)</small>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <label for="condition" class="form-label">Condición</label>
-                            <select name="condition" id="condition" class="form-select">
-                                <option value="0" {% if c130.condition == 0 %}selected{% endif %}>Operativo</option>
-                                <option value="1" {% if c130.condition == 1 %}selected{% endif %}>En Mantenimiento</option>
-                                <option value="2" {% if c130.condition == 2 %}selected{% endif %}>Inoperativo</option>
-                            </select>
-                        </div>
-                        
-                        <div class="col-md-6 mb-3">
-                            <label for="utility_life" class="form-label">Vida Útil (horas)</label>
-                            <input type="number" name="utility_life" id="utility_life" class="form-control" value="{{ c130.utility_life|default:'0' }}">
-                            <small class="text-muted">Horas de vuelo acumuladas</small>
-                        </div>
-                    </div>
-                    
-                    <input type="hidden" name="status" value="0">
-                    <input type="hidden" name="fk_group_id" value="3">
-                    
-                    <div class="mt-4">
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Guardar
-                        </button>
-                        <a href="{% url 'home:c130_list' %}?categoria={{ categoria }}" class="btn btn-secondary">
-                            <i class="fas fa-times"></i> Cancelar
-                        </a>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+    /* Estilos adicionales para el selector */
+    .form-control-modern {
+        width: 100%;
+        padding: 12px 15px;
+        background: rgba(25, 35, 55, 0.8);
+        border: 1px solid rgba(90, 158, 255, 0.3);
+        border-radius: 10px;
+        color: var(--texto-blanco, #f0f4fa);
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control-modern:focus {
+        outline: none;
+        border-color: #7ab8ff;
+        box-shadow: 0 0 10px rgba(90, 158, 255, 0.3);
+        background: rgba(30, 45, 70, 0.9);
+    }
+    
+    .form-control-modern option {
+        background: #1a2635;
+        color: #f0f4fa;
+    }
+    
+    .text-muted {
+        color: #8ea0b8 !important;
+        font-size: 0.7rem;
+        display: block;
+        margin-top: 5px;
+    }
+</style>
 {% endblock %}
